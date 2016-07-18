@@ -250,3 +250,9 @@ paket-files/
 # JetBrains Rider
 .idea/
 *.sln.iml
+
+
+# Ubuntu trash folder
+.Trash-*
+
+TrelloCreds.config
