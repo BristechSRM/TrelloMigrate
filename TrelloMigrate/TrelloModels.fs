@@ -7,3 +7,5 @@ type BasicCard =
       Due : DateTime option
       IdMembers : string [] }
 
+type BoardSummary = 
+    { BasicCards : BasicCard [] }
