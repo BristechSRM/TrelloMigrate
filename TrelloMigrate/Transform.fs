@@ -22,7 +22,7 @@ let private getImageUrl avatarHash =
     else 
         sprintf "https://trello-avatars.s3.amazonaws.com/%s/50.png" avatarHash
 
-let memberToProfile (bMember : BasicMember) : Profile = 
+let private memberToProfile (bMember : BasicMember) : Profile = 
     let forename, surname = parseFullName bMember.FullName
     { Id = Guid.Empty 
       Forename = forename
