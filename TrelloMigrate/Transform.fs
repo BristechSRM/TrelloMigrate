@@ -16,11 +16,11 @@ let private parseFullName (fullName : string) =
         let message = "Full name of member is somehow missing? Make sure everyone on the trello board enters a full name. Input value was: " + fullName
         failwith message   
 
-let private getImageUrl avatarHash =
-    //The option.ofObj is used because the hash is sometimes missing (Silently null). It converts the string to an option string, so null is passed as None       
-    match Option.ofObj avatarHash with
-    | Some hash -> sprintf "https://trello-avatars.s3.amazonaws.com/%s/50.png" hash
-    | None -> "https://placebear.com/50/50"
+let private getImageUrl avatarHash =   
+    if String.IsNullOrWhiteSpace avatarHash then
+        "https://placebear.com/50/50"
+    else 
+        sprintf "https://trello-avatars.s3.amazonaws.com/%s/50.png" avatarHash
 
 let memberToProfile (bMember : BasicMember) : Profile = 
     let forename, surname = parseFullName bMember.FullName
