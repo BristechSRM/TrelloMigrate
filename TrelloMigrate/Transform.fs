@@ -32,4 +32,4 @@ let private memberToProfile (bMember : BasicMember) : Profile =
       Bio = String.Empty }
 
 let toSrmOutline (board : BoardSummary) = 
-    { Profiles = board.BasicMembers |> Array.map memberToProfile }   
+    { Admins = board.BasicMembers |> Array.map memberToProfile }   
