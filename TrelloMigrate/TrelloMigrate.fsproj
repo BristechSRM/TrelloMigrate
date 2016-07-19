@@ -56,7 +56,9 @@
   <Import Project="$(FSharpTargetsPath)" />
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
+    <Compile Include="JsonSettings.fs" />
     <Compile Include="Credentials.fs" />
+    <Compile Include="TrelloModels.fs" />
     <Compile Include="Program.fs" />
     <None Include="App.config" />
     <Content Include="TrelloCreds.config">
@@ -65,11 +67,19 @@
     <Content Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <Reference Include="Bristech.Srm.JsonConverters">
+      <HintPath>..\packages\Bristech.Srm.JsonConverters.0.1.1\lib\net45\Bristech.Srm.JsonConverters.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="FSharp.Core">
       <HintPath>..\packages\FSharp.Core.4.0.0.1\lib\net40\FSharp.Core.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="mscorlib" />
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>..\packages\Newtonsoft.Json.9.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
