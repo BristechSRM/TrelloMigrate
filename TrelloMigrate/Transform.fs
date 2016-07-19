@@ -4,12 +4,31 @@ open TrelloModels
 open SrmApiModels
 open System
 
+//Take first string of split as first name, take the rest as last name
+let private parseFullName (fullName : string) = 
+    let split = fullName.Split()
+    match split.Length with
+    | 1 -> split.[0], ""
+    | x when x > 1 -> 
+        let lastName = split |> Array.skip 1 |> String.concat " " 
+        split.[0],lastName
+    | _ -> 
+        let message = "Full name of member is somehow missing? Make sure everyone on the trello board enters a full name. Input value was: " + fullName
+        failwith message   
+
+let private getImageUrl avatarHash =
+    //The option.ofObj is used because the hash is sometimes missing (Silently null). It converts the string to an option string, so null is passed as None       
+    match Option.ofObj avatarHash with
+    | Some hash -> sprintf "https://trello-avatars.s3.amazonaws.com/%s/50.png" hash
+    | None -> "https://placebear.com/50/50"
+
 let memberToProfile (bMember : BasicMember) : Profile = 
+    let forename, surname = parseFullName bMember.FullName
     { Id = Guid.Empty 
-      Forename = bMember.FullName
-      Surname = bMember.FullName
+      Forename = forename
+      Surname = surname
       Rating = 1 
-      ImageUrl = String.Empty
+      ImageUrl = getImageUrl bMember.AvatarHash
       Bio = String.Empty }
 
 let toSrmOutline (board : BoardSummary) = 
