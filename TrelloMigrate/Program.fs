@@ -11,7 +11,7 @@ let main argv =
         let srmOutputPath = @"SrmApiModelsPreImport.json"
         Credentials.getTrelloCredentials()
         |> TrelloClient.getBoardSummary
-        |> Transform.toSrmOutline
+        |> Transform.toSrmSummary
         |> saveData srmOutputPath
         0
     with ex -> 

@@ -31,5 +31,5 @@ let private memberToProfile (bMember : BasicMember) : Profile =
       ImageUrl = getImageUrl bMember.AvatarHash
       Bio = String.Empty }
 
-let toSrmOutline (board : BoardSummary) = 
+let toSrmSummary (board : BoardSummary) = 
     { Admins = board.BasicMembers |> Array.map memberToProfile }   
