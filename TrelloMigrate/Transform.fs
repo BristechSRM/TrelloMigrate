@@ -42,7 +42,7 @@ module private Profile =
         parseFullName fullName
         |> create defaultImage
 
-module private SpeakerAndSession = 
+module private Speaker = 
 
     let expectedNumberOfGroupsInCardParse = 5
     let speakerNameGroup = 1
@@ -60,13 +60,11 @@ module private SpeakerAndSession =
         match tryGetNameRegexGroups card with
         | Some groups -> 
             let speakerProfile = Profile.fromNameString groups.[speakerNameGroup].Value
-            Some { Speaker = speakerProfile; Session = "" } 
+            Some speakerProfile
         | None -> 
             printfn "Card with title:\n'%s' \nwas ingored because it did not match the accepted format of \n'speaker name[speakeremail](Talk title, brief or possible topic)" card.Name
             None
 
 let toSrmSummary (board : BoardSummary) = 
-    let result = 
-        { Admins = board.GroupedMembers.Members |> Array.map Profile.fromMember 
-          SpeakersAndSessions = board.BasicCards |> Array.choose SpeakerAndSession.parseOrIgnoreCard }   
-    result
+    { Admins = board.GroupedMembers.Members |> Array.map Profile.fromMember 
+      Speakers = board.BasicCards |> Array.choose Speaker.parseOrIgnoreCard }   
