@@ -4,6 +4,7 @@ open System.Net
 open System.Net.Http
 open Newtonsoft.Json
 open TrelloModels
+open SrmApiModels
 open Credentials
 
 module JsonHttpClient = 
@@ -36,6 +37,18 @@ module TrelloClient =
         { BasicCards = getBasicCards trelloCred
           BasicMembers = getBasicMembers trelloCred }
 
+module Transform = 
+    let memberToProfile (bMember : BasicMember) : Profile = 
+        { Id = Guid.Empty 
+          Forename = bMember.FullName
+          Surname = bMember.FullName
+          Rating = 1 
+          ImageUrl = String.Empty
+          Bio = String.Empty }
+
+    let toSrmOutline (board : BoardSummary) = 
+        { Profiles = board.BasicMembers |> Array.map memberToProfile }        
+
 [<EntryPoint>]
 let main argv = 
     let saveData data path= 
@@ -44,9 +57,12 @@ let main argv =
     try 
         JsonSettings.setDefaults()
         let trelloCred = Credentials.getTrelloCredentials()
-        let saveFile = @"SrmBoardDownload.json"
-        let srmBoard = downloadSrmBoard trelloCred
-        saveData srmBoard saveFile
+        let trelloOutputFile = @"SrmBoardDownload.json"
+        let srmOutputFile = @"SrmApiModelsPreImport.json"
+        let srmBoard = TrelloClient.getBoardSummary trelloCred
+        let srmApiOutline = Transform.toSrmOutline srmBoard
+        saveData srmBoard trelloOutputFile
+        saveData srmApiOutline
         0
     with ex -> 
         printfn "%A" ex

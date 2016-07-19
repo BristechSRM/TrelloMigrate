@@ -59,6 +59,7 @@
     <Compile Include="JsonSettings.fs" />
     <Compile Include="Credentials.fs" />
     <Compile Include="TrelloModels.fs" />
+    <Compile Include="SrmApiModels.fs" />
     <Compile Include="Program.fs" />
     <None Include="App.config" />
     <Content Include="TrelloCreds.config">
