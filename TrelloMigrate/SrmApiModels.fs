@@ -9,5 +9,10 @@ type Profile =
       ImageUrl : string
       Bio : string }
 
+type SpeakerAndSession = 
+    { Speaker : Profile 
+      Session : string } //TODO
+
 type SrmOutline = 
-    { Admins : Profile [] }
+    { Admins : Profile [] 
+      SpeakersAndSessions : SpeakerAndSession [] }
