@@ -51,18 +51,16 @@ module Transform =
 
 [<EntryPoint>]
 let main argv = 
-    let saveData data path= 
+    let saveData path data = 
         let result = JsonConvert.SerializeObject(data, Formatting.Indented)
         File.WriteAllText(path, result)
     try 
         JsonSettings.setDefaults()
-        let trelloCred = Credentials.getTrelloCredentials()
-        let trelloOutputFile = @"SrmBoardDownload.json"
         let srmOutputFile = @"SrmApiModelsPreImport.json"
-        let srmBoard = TrelloClient.getBoardSummary trelloCred
-        let srmApiOutline = Transform.toSrmOutline srmBoard
-        saveData srmBoard trelloOutputFile
-        saveData srmApiOutline
+        Credentials.getTrelloCredentials()
+        |> TrelloClient.getBoardSummary
+        |> Transform.toSrmOutline
+        |> saveData srmOutputFile
         0
     with ex -> 
         printfn "%A" ex
