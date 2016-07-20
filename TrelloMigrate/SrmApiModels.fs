@@ -10,4 +10,5 @@ type Profile =
       Bio : string }
 
 type SrmOutline = 
-    { Profiles : Profile [] }
+    { Admins : Profile [] 
+      Speakers : Profile [] }

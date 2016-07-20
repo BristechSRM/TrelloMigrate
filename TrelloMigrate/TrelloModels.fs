@@ -13,6 +13,10 @@ type BasicMember =
       FullName : string
       AvatarHash : string }
 
+type GroupedMembers = 
+    { Members : BasicMember []
+      IgnoredMembers : BasicMember [] }
+
 type BoardSummary = 
     { BasicCards : BasicCard [] 
-      BasicMembers : BasicMember [] }
+      GroupedMembers : GroupedMembers }

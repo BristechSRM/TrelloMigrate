@@ -60,8 +60,9 @@
     <Compile Include="Credentials.fs" />
     <Compile Include="JsonHttpClient.fs" />
     <Compile Include="TrelloModels.fs" />
-    <Compile Include="TrelloClient.fs" />
     <Compile Include="SrmApiModels.fs" />
+    <Compile Include="TransformationModels.fs" />
+    <Compile Include="TrelloClient.fs" />
     <Compile Include="Transform.fs" />
     <Compile Include="Program.fs" />
     <None Include="App.config" />
