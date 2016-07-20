@@ -19,10 +19,10 @@ module private Profile =
             let message = "Full name of member is somehow missing? Make sure everyone on the trello board enters a full name. Input value was: " + fullName
             failwith message   
 
-    let defaultImage = "https://placebear.com/50/50"
+    let defaultImageUrl = "https://placebear.com/50/50"
     let getImageUrl avatarHash =   
         if String.IsNullOrWhiteSpace avatarHash then
-            defaultImage
+            defaultImageUrl
         else 
             sprintf "https://trello-avatars.s3.amazonaws.com/%s/50.png" avatarHash
 
@@ -40,7 +40,7 @@ module private Profile =
 
     let fromNameString (fullName : string) = 
         parseFullName fullName
-        |> create defaultImage
+        |> create defaultImageUrl
 
 module private Speaker = 
 
