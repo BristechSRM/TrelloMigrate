@@ -65,6 +65,6 @@ module private Speaker =
             printfn "Card with title:\n'%s' \nwas ingored because it did not match the accepted format of \n'speaker name[speakeremail](Talk title, brief or possible topic)" card.Name
             None
 
-let toSrmSummary (board : BoardSummary) = 
+let toSrmModels (board : BoardSummary) = 
     { Admins = board.GroupedMembers.Members |> Array.map Profile.fromMember 
       Speakers = board.BasicCards |> Array.choose Speaker.parseOrIgnoreCard }   

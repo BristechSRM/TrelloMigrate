@@ -10,8 +10,10 @@ let main argv =
         JsonSettings.setDefaults()
         Credentials.getTrelloCredentials()
         |> TrelloClient.getBoardSummary
-        |> Transform.toSrmSummary
-        |> saveData Config.srmOutputPath
+        |> Transform.toSrmModels
+        |> (fun wrapper -> saveData Config.srmOutputPath wrapper; wrapper)
+        |> SrmImport.importAll
+
         0
     with ex -> 
         printfn "%A" ex

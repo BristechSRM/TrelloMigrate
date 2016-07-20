@@ -9,6 +9,6 @@ type Profile =
       ImageUrl : string
       Bio : string }
 
-type SrmOutline = 
+type SrmWrapper = 
     { Admins : Profile [] 
       Speakers : Profile [] }

@@ -65,6 +65,8 @@
     <Compile Include="TransformationModels.fs" />
     <Compile Include="TrelloClient.fs" />
     <Compile Include="Transform.fs" />
+    <Compile Include="SrmApiClient.fs" />
+    <Compile Include="SrmImport.fs" />
     <Compile Include="Program.fs" />
     <None Include="App.config" />
     <Content Include="TrelloCreds.config">
