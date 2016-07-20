@@ -46,12 +46,12 @@ module private Speaker =
 
     let tryParseCardName (card : BasicCard) = 
         let tryGetValue (group : Group) = 
-            if group.Success then Some group.Value
+            if group.Success && not <| String.IsNullOrWhiteSpace group.Value then Some <| group.Value.Trim()
             else None
         
-        let m = Regex.Match(card.Name, "(?<name>[^\[\]]* )(\[(?<email>.*)\])? *\((?<talk>.*)\)(?<extra>.*)?$", RegexOptions.ExplicitCapture)
+        let m = Regex.Match(card.Name, "(?<name>[^\[\]]* *)(\[(?<email>.*)\])? *\((?<talk>.*)\)(?<extra>.*)?$", RegexOptions.ExplicitCapture)
         if m.Success && m.Groups.["name"].Success && not <| String.IsNullOrWhiteSpace m.Groups.["name"].Value then 
-            { SpeakerName = m.Groups.["name"].Value
+            { SpeakerName = m.Groups.["name"].Value.Trim()
               SpeakerEmail = tryGetValue m.Groups.["email"]
               TalkData = tryGetValue m.Groups.["talk"]
               ExtraData = tryGetValue m.Groups.["extra"] }
