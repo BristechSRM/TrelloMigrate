@@ -15,4 +15,4 @@ let private getUriConfigValue (key : string) =
     Uri(value)
 
 let srmOutputPath = getConfigValue "SrmOutputPath"
-let sessionsUri = getUriConfigValue "SessionsUrl"
+let sessionsServiceUri = getUriConfigValue "SessionsServiceUrl"
