@@ -58,6 +58,7 @@
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="JsonSettings.fs" />
     <Compile Include="Credentials.fs" />
+    <Compile Include="Config.fs" />
     <Compile Include="JsonHttpClient.fs" />
     <Compile Include="TrelloModels.fs" />
     <Compile Include="SrmApiModels.fs" />

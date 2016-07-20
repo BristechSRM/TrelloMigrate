@@ -8,11 +8,10 @@ let main argv =
         File.WriteAllText(path, result)
     try 
         JsonSettings.setDefaults()
-        let srmOutputPath = @"SrmApiModelsPreImport.json"
         Credentials.getTrelloCredentials()
         |> TrelloClient.getBoardSummary
         |> Transform.toSrmSummary
-        |> saveData srmOutputPath
+        |> saveData Config.srmOutputPath
         0
     with ex -> 
         printfn "%A" ex
