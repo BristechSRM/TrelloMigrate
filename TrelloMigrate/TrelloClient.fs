@@ -18,7 +18,7 @@ let private getBasicMembers trelloCred =
 let private groupMembers (members) = 
     let ignoredAdminUserNames = [ "samdavies"; "jamesphillpotts"; "tamarachehayebmakarem1"; "tamaramakarem"; "nicholashemley" ]
     members
-    |> Array.partition (fun bMember -> ignoredAdminUserNames |> List.contains bMember.Username)
+    |> Array.partition (fun basicMember -> ignoredAdminUserNames |> List.contains basicMember.Username)
     |> (fun (ignoredMembers, keptMembers) -> { Members = keptMembers; IgnoredMembers = ignoredMembers } )
 
 let getBoardSummary trelloCred =     

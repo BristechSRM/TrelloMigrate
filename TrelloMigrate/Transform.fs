@@ -34,9 +34,9 @@ module private Profile =
           ImageUrl = imageUrl
           Bio = String.Empty }
 
-    let fromMember (bMember : BasicMember) = 
-        parseFullName bMember.FullName
-        |> create (getImageUrl bMember.AvatarHash)
+    let fromMember (basicMember : BasicMember) = 
+        parseFullName basicMember.FullName
+        |> create (getImageUrl basicMember.AvatarHash)
 
     let fromNameString (fullName : string) = 
         parseFullName fullName
