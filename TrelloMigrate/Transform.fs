@@ -44,22 +44,23 @@ module private Profile =
 
 module private Speaker = 
 
-    let expectedNumberOfGroupsInCardParse = 5
-    let speakerNameGroup = 1
+    let tryGetValue (group: Group) = if group.Success then Some group.Value else None
 
-    let allGroupsMatched (groups : GroupCollection) = 
-        groups.Count = expectedNumberOfGroupsInCardParse && not <| String.IsNullOrWhiteSpace(groups.[speakerNameGroup].Value)
-
-    let tryGetNameRegexGroups (card : BasicCard) = 
-        let m = Regex.Match(card.Name, "(.*)\[(.*)\]\((.*)\)(.*)$")
-        if m.Success && allGroupsMatched m.Groups then Some m.Groups 
+    let tryParseCardName (card : BasicCard) = 
+        let options = RegexOptions.ExplicitCapture
+        let m = Regex.Match(card.Name, "(?<name>[^\[\]]* )(\[(?<email>.*)\])? *\((?<talk>.*)\)(?<extra>.*)?$", options)
+        if m.Success && m.Groups.["name"].Success then
+            { SpeakerName = m.Groups.["name"].Value
+              SpeakerEmail = tryGetValue m.Groups.["email"]
+              TalkData = tryGetValue m.Groups.["talk"]
+              ExtraData = tryGetValue m.Groups.["extra"] } |> Some
         else None
 
     //Note: Currently ignoring any cards that don't have the title (name) filled out correctly. 
     let parseOrIgnoreCard (card : BasicCard) = 
-        match tryGetNameRegexGroups card with
-        | Some groups -> 
-            let speakerProfile = Profile.fromNameString groups.[speakerNameGroup].Value
+        match tryParseCardName card with
+        | Some parseData -> 
+            let speakerProfile = Profile.fromNameString parseData.SpeakerName
             Some speakerProfile
         | None -> 
             printfn "Card with title:\n'%s' \nwas ingored because it did not match the accepted format of \n'speaker name[speakeremail](Talk title, brief or possible topic)" card.Name
