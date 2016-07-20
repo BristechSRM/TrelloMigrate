@@ -49,7 +49,7 @@ module private Speaker =
             if group.Success && not <| String.IsNullOrWhiteSpace group.Value then Some <| group.Value.Trim()
             else None
         
-        let m = Regex.Match(card.Name, "(?<name>[^\[\]]* *)(\[(?<email>.*)\])? *\((?<talk>.*)\)(?<extra>.*)?$", RegexOptions.ExplicitCapture)
+        let m = Regex.Match(card.Name, "(?<name>[^\[\]]* *)\[(?<email>.*)\] *\((?<talk>.*)\)(?<extra>.*)?$", RegexOptions.ExplicitCapture)
         if m.Success && m.Groups.["name"].Success && not <| String.IsNullOrWhiteSpace m.Groups.["name"].Value then 
             { SpeakerName = m.Groups.["name"].Value.Trim()
               SpeakerEmail = tryGetValue m.Groups.["email"]
