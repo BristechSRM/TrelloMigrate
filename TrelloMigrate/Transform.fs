@@ -51,10 +51,7 @@ module private Speaker =
         
         let m = Regex.Match(card.Name, "(?<name>[^\[\]]* *)\[(?<email>.*)\] *\((?<talk>.*)\)(?<extra>.*)?$", RegexOptions.ExplicitCapture)
         if m.Success && m.Groups.["name"].Success && not <| String.IsNullOrWhiteSpace m.Groups.["name"].Value then 
-            { SpeakerName = m.Groups.["name"].Value.Trim()
-              SpeakerEmail = tryGetValue m.Groups.["email"]
-              TalkData = tryGetValue m.Groups.["talk"]
-              ExtraData = tryGetValue m.Groups.["extra"] }
+            { SpeakerName = m.Groups.["name"].Value.Trim() }
             |> Some
         else None
 
