@@ -8,11 +8,14 @@ let main argv =
         File.WriteAllText(path, result)
     try 
         JsonSettings.setDefaults()
-        Credentials.getTrelloCredentials()
-        |> TrelloClient.getBoardSummary
-        |> Transform.toSrmModels
-        |> (fun wrapper -> saveData Config.srmOutputPath wrapper; wrapper)
-        |> SrmImport.importAll
+        let preImportSrmModels = 
+            Credentials.getTrelloCredentials()
+            |> TrelloClient.getBoardSummary
+            |> Transform.toSrmModels
+
+        saveData Config.srmOutputPath preImportSrmModels
+        
+        SrmImport.importAll preImportSrmModels
 
         0
     with ex -> 
