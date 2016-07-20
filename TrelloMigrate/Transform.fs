@@ -44,16 +44,18 @@ module private Profile =
 
 module private Speaker = 
 
-    let tryGetValue (group: Group) = if group.Success then Some group.Value else None
-
     let tryParseCardName (card : BasicCard) = 
-        let options = RegexOptions.ExplicitCapture
-        let m = Regex.Match(card.Name, "(?<name>[^\[\]]* )(\[(?<email>.*)\])? *\((?<talk>.*)\)(?<extra>.*)?$", options)
-        if m.Success && m.Groups.["name"].Success then
+        let tryGetValue (group : Group) = 
+            if group.Success then Some group.Value
+            else None
+        
+        let m = Regex.Match(card.Name, "(?<name>[^\[\]]* )(\[(?<email>.*)\])? *\((?<talk>.*)\)(?<extra>.*)?$", RegexOptions.ExplicitCapture)
+        if m.Success && m.Groups.["name"].Success && not <| String.IsNullOrWhiteSpace m.Groups.["name"].Value then 
             { SpeakerName = m.Groups.["name"].Value
               SpeakerEmail = tryGetValue m.Groups.["email"]
               TalkData = tryGetValue m.Groups.["talk"]
-              ExtraData = tryGetValue m.Groups.["extra"] } |> Some
+              ExtraData = tryGetValue m.Groups.["extra"] }
+            |> Some
         else None
 
     //Note: Currently ignoring any cards that don't have the title (name) filled out correctly. 
