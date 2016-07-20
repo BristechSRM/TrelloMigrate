@@ -10,7 +10,7 @@ module private Profile =
 
     //Note : Currently failing if any members (Admin) have a missing name
     //Take first string of split as first name, take the rest as last name
-    let parseFullName (fullName : string) = 
+    let private parseFullName (fullName : string) = 
         let split = fullName.Split()
         match split.Length with
         | 1 -> { Forename = split.[0]; Surname = "" }
@@ -19,14 +19,15 @@ module private Profile =
             let message = "Full name of member is somehow missing? Make sure everyone on the trello board enters a full name. Input value was: " + fullName
             failwith message   
 
-    let defaultImageUrl = "https://placebear.com/50/50"
-    let getImageUrl avatarHash =   
+    let private defaultImageUrl = "https://placebear.com/50/50"
+
+    let private getImageUrl avatarHash =   
         if String.IsNullOrWhiteSpace avatarHash then
             defaultImageUrl
         else 
             sprintf "https://trello-avatars.s3.amazonaws.com/%s/50.png" avatarHash
 
-    let create imageUrl (names : Names) : Profile = 
+    let private create imageUrl (names : Names) : Profile = 
         { Id = Guid.Empty 
           Forename = names.Forename
           Surname = names.Surname
@@ -44,7 +45,7 @@ module private Profile =
 
 module private Speaker = 
 
-    let tryParseCardName (card : BasicCard) = 
+    let private tryParseCardName (card : BasicCard) = 
         let tryGetValue (group : Group) = 
             if group.Success && not <| String.IsNullOrWhiteSpace group.Value then Some <| group.Value.Trim()
             else None
