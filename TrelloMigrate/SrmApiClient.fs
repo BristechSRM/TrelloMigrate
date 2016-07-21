@@ -14,3 +14,9 @@ module Profile =
     let postAndGetId (profile : Profile) = 
         let result = post endpoint profile
         { profile with Id = parseQuotedGuid result }
+
+module Handle = 
+    let endpoint = Uri(sessionsServiceUri, "Handles")
+
+    let post (handle : Handle) = 
+        post endpoint handle |> ignore

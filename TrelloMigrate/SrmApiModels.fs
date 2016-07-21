@@ -16,7 +16,7 @@ type Handle =
 
 type ProfileWithHandles = 
     { Profile : Profile
-      Handle : Handle [] }
+      Handles : Handle [] }
 
 type SrmWrapper = 
     { Admins : ProfileWithHandles [] 

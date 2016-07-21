@@ -44,8 +44,8 @@ module private Profile =
         |> create defaultImageUrl
 
 module private Handle = 
-    let createEmailHandle email= 
-        { ProfileId = Guid.NewGuid(); Type = "email"; Identifier = email }
+    let createEmailHandle (email : string) = 
+        { ProfileId = Guid.NewGuid(); Type = "email"; Identifier = email.ToLowerInvariant() }
 
 module private Admin = 
     let private nameToScottLogicEmail (forename : string) (surname : string) = 
@@ -59,7 +59,7 @@ module private Admin =
     let create (basicMember : BasicMember) = 
         let profile = Profile.fromMember basicMember
         let handle = nameToScottLogicEmail profile.Forename profile.Surname |> Handle.createEmailHandle
-        { Profile = profile; Handle = [|handle|] }
+        { Profile = profile; Handles = [|handle|] }
 
 module private Speaker = 
 
@@ -85,7 +85,7 @@ module private Speaker =
                 | Some email -> [| Handle.createEmailHandle email |]
                 | None -> [||]
 
-            Some { Profile = speakerProfile; Handle = handles }
+            Some { Profile = speakerProfile; Handles = handles }
         | None -> 
             printfn "Card with title:\n'%s' \nwas ingored because it did not match the accepted format of \n'speaker name[speakeremail](Talk title, brief or possible topic)" card.Name
             None        

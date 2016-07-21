@@ -7,7 +7,10 @@ open SrmApiClient
 //Maybe this should be written in a imperative way instead to make that obvious? 
 
 let private importAdmins (wrapper : SrmWrapper) = 
-    wrapper.Admins |> Array.map (fun admin -> Profile.postAndGetId admin.Profile)
+    wrapper.Admins |> Array.map (fun admin -> 
+        let updatedAdmin = Profile.postAndGetId admin.Profile
+        { Profile = updatedAdmin
+          Handles = admin.Handles |> Array.map (fun handle -> { handle with ProfileId = updatedAdmin.Id }) }) 
 
 let private importSpeakers (wrapper : SrmWrapper) = 
     let speakerIsAdmin (admins : ProfileWithHandles []) (speaker : ProfileWithHandles) =
@@ -18,9 +21,20 @@ let private importSpeakers (wrapper : SrmWrapper) =
         
     wrapper.Speakers
     |> Array.filter (speakerIsAdmin wrapper.Admins >> not)
-    |> Array.map (fun speaker -> Profile.postAndGetId speaker.Profile)
+    |> Array.map (fun speaker -> 
+        let updatedSpeaker = Profile.postAndGetId speaker.Profile
+        { Profile = updatedSpeaker
+          Handles = speaker.Handles |> Array.map (fun handle -> { handle with ProfileId = updatedSpeaker.Id }) })
+
+let private importHandles (profiles : ProfileWithHandles []) = 
+    profiles 
+    |> Array.iter (fun profile -> 
+        profile.Handles |> Array.iter Handle.post )
     
 let importAll wrapper = 
     let importedAdmins = importAdmins wrapper
     let importedSpeakers = importSpeakers wrapper
+    importHandles importedAdmins
+    importHandles importedSpeakers
+    
     ()
