@@ -6,7 +6,7 @@ open SrmApiClient
 //Since everything in here is causing side effects, this module isn't as functional.
 //Maybe this should be written in a imperative way instead to make that obvious? 
 
-let private importAdmins (wrapper : SrmWrapper) = Array.map Profile.postAndGetId wrapper.Admins
+let private importAdmins (wrapper : SrmWrapper) = wrapper.Admins |> Array.map Profile.postAndGetId 
 
 let private importSpeakers (wrapper : SrmWrapper) = 
     let speakerIsAdmin (admins : Profile []) (speaker : Profile) =
@@ -16,7 +16,7 @@ let private importSpeakers (wrapper : SrmWrapper) =
         | None -> false
         
     wrapper.Speakers
-    |> Array.filter (speakerIsAdmin wrapper.Admins)
+    |> Array.filter (speakerIsAdmin wrapper.Admins >> not)
     |> Array.map Profile.postAndGetId
     
 let importAll wrapper = 
