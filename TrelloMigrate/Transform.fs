@@ -43,6 +43,19 @@ module private Profile =
         parseFullName fullName
         |> create defaultImageUrl
 
+module private Admin = 
+    let private nameToScottLogicEmail (forename : string) (surname : string) = 
+        if String.IsNullOrWhiteSpace surname then
+            forename + "@scottlogic.co.uk"
+        else 
+            let firstNameFirstLetter = forename.Chars(0)
+            let lastName = surname.Split() |> Array.last
+            sprintf "%c%s@scottlogic.co.uk" firstNameFirstLetter lastName
+
+    let create (basicMember : BasicMember) = 
+        let profile = Profile.fromMember basicMember
+        { Profile = profile; Handle = [||] }
+
 module private Speaker = 
 
     let private tryParseCardName (cardName : string) = 
@@ -57,15 +70,15 @@ module private Speaker =
         else None
 
     //Note: Currently ignoring any cards that don't have the title (name) filled out correctly. 
-    let parseOrIgnoreCard (card : BasicCard) = 
+    let tryParseCardToSpeaker (card : BasicCard) = 
         match tryParseCardName card.Name with
         | Some parseData -> 
             let speakerProfile = Profile.fromNameString parseData.SpeakerName
-            Some speakerProfile
+            Some { Profile = speakerProfile; Handle = [||]}
         | None -> 
             printfn "Card with title:\n'%s' \nwas ingored because it did not match the accepted format of \n'speaker name[speakeremail](Talk title, brief or possible topic)" card.Name
-            None
+            None        
 
 let toSrmModels (board : BoardSummary) = 
-    { Admins = board.GroupedMembers.Members |> Array.map Profile.fromMember 
-      Speakers = board.BasicCards |> Array.choose Speaker.parseOrIgnoreCard }   
+    { Admins = board.GroupedMembers.Members |> Array.map Admin.create
+      Speakers = board.BasicCards |> Array.choose Speaker.tryParseCardToSpeaker }   
