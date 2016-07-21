@@ -43,6 +43,10 @@ module private Profile =
         parseFullName fullName
         |> create defaultImageUrl
 
+module private Handle = 
+    let createEmailHandle email= 
+        { ProfileId = Guid.NewGuid(); Type = "email"; Identifier = email }
+
 module private Admin = 
     let private nameToScottLogicEmail (forename : string) (surname : string) = 
         if String.IsNullOrWhiteSpace surname then
@@ -54,7 +58,8 @@ module private Admin =
 
     let create (basicMember : BasicMember) = 
         let profile = Profile.fromMember basicMember
-        { Profile = profile; Handle = [||] }
+        let handle = nameToScottLogicEmail profile.Forename profile.Surname |> Handle.createEmailHandle
+        { Profile = profile; Handle = [|handle|] }
 
 module private Speaker = 
 
@@ -65,7 +70,8 @@ module private Speaker =
         
         let m = Regex.Match(cardName, "(?<name>[^\[\]]* *)\[(?<email>.*)\] *\((?<talk>.*)\)(?<extra>.*)?$", RegexOptions.ExplicitCapture)
         if m.Success && m.Groups.["name"].Success && not <| String.IsNullOrWhiteSpace m.Groups.["name"].Value then 
-            { SpeakerName = m.Groups.["name"].Value.Trim() }
+            { SpeakerName = m.Groups.["name"].Value.Trim() 
+              SpeakerEmail = tryGetValue m.Groups.["email"] }
             |> Some
         else None
 
@@ -74,7 +80,12 @@ module private Speaker =
         match tryParseCardName card.Name with
         | Some parseData -> 
             let speakerProfile = Profile.fromNameString parseData.SpeakerName
-            Some { Profile = speakerProfile; Handle = [||]}
+            let handles = 
+                match parseData.SpeakerEmail with
+                | Some email -> [| Handle.createEmailHandle email |]
+                | None -> [||]
+
+            Some { Profile = speakerProfile; Handle = handles }
         | None -> 
             printfn "Card with title:\n'%s' \nwas ingored because it did not match the accepted format of \n'speaker name[speakeremail](Talk title, brief or possible topic)" card.Name
             None        
