@@ -6,11 +6,12 @@ open SrmApiClient
 //Since everything in here is causing side effects, this module isn't as functional.
 //Maybe this should be written in a imperative way instead to make that obvious? 
 
-let private importAdmins (wrapper : SrmWrapper) = 
-    wrapper.Admins |> Array.map (fun admin -> 
-        let updatedAdmin = Profile.postAndGetId admin.Profile
-        { Profile = updatedAdmin
-          Handles = admin.Handles |> Array.map (fun handle -> { handle with ProfileId = updatedAdmin.Id }) }) 
+let private importProfileAndUpdateIds (profile : ProfileWithHandles) = 
+    let updatedProfile = Profile.postAndGetId profile.Profile
+    { Profile = updatedProfile
+      Handles = profile.Handles |> Array.map (fun handle -> { handle with ProfileId = updatedProfile.Id }) } 
+
+let private importAdmins (wrapper : SrmWrapper) = wrapper.Admins |> Array.map importProfileAndUpdateIds
 
 let private importSpeakers (wrapper : SrmWrapper) = 
     let speakerIsAdmin (admins : ProfileWithHandles []) (speaker : ProfileWithHandles) =
@@ -21,10 +22,7 @@ let private importSpeakers (wrapper : SrmWrapper) =
         
     wrapper.Speakers
     |> Array.filter (speakerIsAdmin wrapper.Admins >> not)
-    |> Array.map (fun speaker -> 
-        let updatedSpeaker = Profile.postAndGetId speaker.Profile
-        { Profile = updatedSpeaker
-          Handles = speaker.Handles |> Array.map (fun handle -> { handle with ProfileId = updatedSpeaker.Id }) })
+    |> Array.map importProfileAndUpdateIds
 
 let private importHandles (profiles : ProfileWithHandles []) = 
     profiles 
