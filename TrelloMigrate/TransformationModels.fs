@@ -1,9 +1,9 @@
 ﻿module TransformationModels
-open SrmApiModels
 
 type Names = 
     { Forename : string
       Surname : string }
 
-type CardNameParseData = 
-    { SpeakerName : string }
+type ParsedCard = 
+    { SpeakerName : string 
+      SpeakerEmail : string option }

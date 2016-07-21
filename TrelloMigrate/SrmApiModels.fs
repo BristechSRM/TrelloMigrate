@@ -9,6 +9,15 @@ type Profile =
       ImageUrl : string
       Bio : string }
 
+type Handle = 
+    { ProfileId : Guid 
+      Type : string
+      Identifier : string }
+
+type ProfileWithHandles = 
+    { Profile : Profile
+      Handles : Handle [] }
+
 type SrmWrapper = 
-    { Admins : Profile [] 
-      Speakers : Profile [] }
+    { Admins : ProfileWithHandles [] 
+      Speakers : ProfileWithHandles [] }
