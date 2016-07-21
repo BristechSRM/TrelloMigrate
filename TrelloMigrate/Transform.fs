@@ -56,7 +56,7 @@ module private Admin =
             let lastName = surname.Split() |> Array.last
             sprintf "%c%s@scottlogic.co.uk" firstNameFirstLetter lastName
 
-    let create (basicMember : BasicMember) = 
+    let createAdminProfileWithHandles (basicMember : BasicMember) = 
         let profile = Profile.fromMember basicMember
         let handle = nameToScottLogicEmail profile.Forename profile.Surname |> Handle.createEmailHandle
         { Profile = profile; Handles = [|handle|] }
@@ -76,7 +76,7 @@ module private Speaker =
         else None
 
     //Note: Currently ignoring any cards that don't have the title (name) filled out correctly. 
-    let tryParseCardToSpeaker (card : BasicCard) = 
+    let tryCreateSpeakerFromCard (card : BasicCard) = 
         match tryParseCardName card.Name with
         | Some parseData -> 
             let speakerProfile = Profile.fromNameString parseData.SpeakerName
@@ -92,5 +92,5 @@ module private Speaker =
 
 //TODO deal with ignored admins when creating sessions
 let toSrmModels (board : BoardSummary) = 
-    { Admins = board.GroupedMembers.Members |> Array.map Admin.create
-      Speakers = board.BasicCards |> Array.choose Speaker.tryParseCardToSpeaker }   
+    { Admins = board.GroupedMembers.Members |> Array.map Admin.createAdminProfileWithHandles
+      Speakers = board.BasicCards |> Array.choose Speaker.tryCreateSpeakerFromCard }   

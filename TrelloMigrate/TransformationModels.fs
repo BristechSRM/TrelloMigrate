@@ -4,6 +4,6 @@ type Names =
     { Forename : string
       Surname : string }
 
-type CardNameParseData = 
+type ParsedCard = 
     { SpeakerName : string 
       SpeakerEmail : string option }
