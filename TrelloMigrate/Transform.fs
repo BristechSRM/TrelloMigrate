@@ -45,12 +45,12 @@ module private Profile =
 
 module private Speaker = 
 
-    let private tryParseCardName (card : BasicCard) = 
+    let private tryParseCardName (cardName : string) = 
         let tryGetValue (group : Group) = 
             if group.Success && not <| String.IsNullOrWhiteSpace group.Value then Some <| group.Value.Trim()
             else None
         
-        let m = Regex.Match(card.Name, "(?<name>[^\[\]]* *)\[(?<email>.*)\] *\((?<talk>.*)\)(?<extra>.*)?$", RegexOptions.ExplicitCapture)
+        let m = Regex.Match(cardName, "(?<name>[^\[\]]* *)\[(?<email>.*)\] *\((?<talk>.*)\)(?<extra>.*)?$", RegexOptions.ExplicitCapture)
         if m.Success && m.Groups.["name"].Success && not <| String.IsNullOrWhiteSpace m.Groups.["name"].Value then 
             { SpeakerName = m.Groups.["name"].Value.Trim() }
             |> Some
@@ -58,7 +58,7 @@ module private Speaker =
 
     //Note: Currently ignoring any cards that don't have the title (name) filled out correctly. 
     let parseOrIgnoreCard (card : BasicCard) = 
-        match tryParseCardName card with
+        match tryParseCardName card.Name with
         | Some parseData -> 
             let speakerProfile = Profile.fromNameString parseData.SpeakerName
             Some speakerProfile
