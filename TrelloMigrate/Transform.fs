@@ -16,7 +16,7 @@ module private Profile =
         | 1 -> { Forename = split.[0]; Surname = "" }
         | x when x > 1 -> { Forename = split.[0]; Surname = split |> Array.skip 1 |> String.concat " " }
         | _ -> 
-            let message = "Full name of member is somehow missing? Make sure everyone on the trello board enters a full name. Input value was: " + fullName
+            let message = "Full name of is missing? All Admins must have a full name, and all speaker cards must have the speaker name filled in. Input value was: " + fullName
             failwith message   
 
     let private defaultImageUrl = "https://placebear.com/50/50"
@@ -90,6 +90,7 @@ module private Speaker =
             printfn "Card with title:\n'%s' \nwas ingored because it did not match the accepted format of \n'speaker name[speakeremail](Talk title, brief or possible topic)" card.Name
             None        
 
+//TODO deal with ignored admins when creating sessions
 let toSrmModels (board : BoardSummary) = 
     { Admins = board.GroupedMembers.Members |> Array.map Admin.create
       Speakers = board.BasicCards |> Array.choose Speaker.tryParseCardToSpeaker }   
