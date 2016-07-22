@@ -28,6 +28,9 @@ let private importSpeakers (sessionsAndSpeakers : SessionAndSpeaker [] ) (adminP
 let private importHandles (profiles : ProfileWithHandles []) = 
     profiles |> Array.iter (fun profile -> profile.Handles |> Array.iter Handle.post)
     
+let private importSessions (sessionsAndSpeakers : SessionAndSpeaker []) = 
+    sessionsAndSpeakers |> Array.map (fun s -> Session.postAndGetId s.Session)
+
 let importAll wrapper = 
     let importedAdmins = wrapper.Admins |> Array.map importProfileAndUpdateIds
     let importedSpeakersWithSessions = importSpeakers wrapper.SessionsAndSpeakers importedAdmins
@@ -42,8 +45,6 @@ let importAll wrapper =
             | Some _ -> {ss with Session = {ss.Session with AdminId = adminId; Status = "assigned"}}
             | None -> {ss with Session = {ss.Session with AdminId = adminId}} )
 
-    let importedSession = 
-        preparedSessions
-        |> Array.map (fun s -> Session.postAndGetId s.Session)
+    let importedSessions = importSessions preparedSessions
     
     ()
