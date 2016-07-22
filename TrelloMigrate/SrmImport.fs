@@ -38,9 +38,11 @@ let private setAdminIdOnSessions (importedAdmins : Admin []) (ss : SessionSpeake
             importedAdmins 
             |> Array.tryPick (fun admin -> if trelloId = admin.TrelloMemberId then Some admin.ProfileWithHandles.Profile.Id else None)
         | None -> None
-    match foundAdminId with
-    | Some _ -> {ss with Session = {ss.Session with AdminId = foundAdminId; Status = "assigned"}}
-    | None -> {ss with Session = {ss.Session with AdminId = foundAdminId}} 
+    let status = 
+        match foundAdminId with
+        | Some _ -> "assigned"
+        | None -> "unassigned" 
+    {ss with Session = {ss.Session with AdminId = foundAdminId; Status = status }}
     
 let private importSessions sessionsAndSpeakers = 
     sessionsAndSpeakers |> Array.map (fun s -> Session.postAndGetId s.Session)
