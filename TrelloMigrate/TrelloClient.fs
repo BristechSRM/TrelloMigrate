@@ -15,12 +15,6 @@ let private getBasicMembers trelloCred =
     |> Uri
     |> JsonHttpClient.get<BasicMember []>
 
-let private groupMembers (members) = 
-    let ignoredAdminUserNames = [ "samdavies"; "jamesphillpotts"; "tamarachehayebmakarem1"; "tamaramakarem"; "nicholashemley" ]
-    members
-    |> Array.partition (fun basicMember -> ignoredAdminUserNames |> List.contains basicMember.Username)
-    |> (fun (ignoredMembers, keptMembers) -> { Members = keptMembers; IgnoredMembers = ignoredMembers } )
-
 let getBoardSummary trelloCred =     
     { BasicCards = getBasicCards trelloCred
-      GroupedMembers = getBasicMembers trelloCred |> groupMembers}
+      Members = getBasicMembers trelloCred }
