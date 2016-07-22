@@ -38,5 +38,5 @@ let importAll wrapper =
     importHandles (importedSpeakersWithSessions |> Array.map (fun x -> x.Speaker))
 
     let importedSessions = importSessions importedSpeakersWithSessions
-    
+
     ()
