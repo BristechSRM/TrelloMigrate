@@ -32,17 +32,17 @@ let private importHandles (profiles : ProfileWithHandles []) =
     profiles |> Array.iter (fun profile -> profile.Handles |> Array.iter Handle.post)
 
 let private setAdminIdOnSessions (importedAdmins : Admin []) (ss : SessionSpeakerAndTrelloIds) = 
-    let adminId = 
+    let foundAdminId = 
         match ss.AdminTrelloId with 
         | Some trelloId -> 
             importedAdmins 
             |> Array.tryPick (fun admin -> if trelloId = admin.TrelloMemberId then Some admin.ProfileWithHandles.Profile.Id else None)
         | None -> None
-    match adminId with
-    | Some _ -> {ss with Session = {ss.Session with AdminId = adminId; Status = "assigned"}}
-    | None -> {ss with Session = {ss.Session with AdminId = adminId}} 
+    match foundAdminId with
+    | Some _ -> {ss with Session = {ss.Session with AdminId = foundAdminId; Status = "assigned"}}
+    | None -> {ss with Session = {ss.Session with AdminId = foundAdminId}} 
     
-let private importSessions (sessionsAndSpeakers : SessionSpeakerAndTrelloIds []) = 
+let private importSessions sessionsAndSpeakers = 
     sessionsAndSpeakers |> Array.map (fun s -> Session.postAndGetId s.Session)
 
 let importAll wrapper = 
@@ -52,5 +52,5 @@ let importAll wrapper =
     importHandles (importedSpeakersWithSessions |> Array.map (fun x -> x.Speaker))
 
     let preparedSessions = importedSpeakersWithSessions |> Array.map (setAdminIdOnSessions importedAdmins)
-    let importedSessions = importSessions importedSpeakersWithSessions
+    let importedSessions = importSessions preparedSessions
     ()
