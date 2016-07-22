@@ -18,6 +18,20 @@ type ProfileWithHandles =
     { Profile : Profile
       Handles : Handle [] }
 
+type Session = 
+     { Id : Guid 
+       Title : string
+       Description : string
+       Status : string
+       Date : DateTime option
+       SpeakerId : Guid
+       AdminId : Guid option 
+       DateAdded : DateTime option }
+
+type SessionAndSpeaker = 
+    { Session : Session 
+      Speaker : ProfileWithHandles }
+
 type SrmWrapper = 
     { Admins : ProfileWithHandles [] 
-      Speakers : ProfileWithHandles [] }
+      SessionsAndSpeakers : SessionAndSpeaker [] }

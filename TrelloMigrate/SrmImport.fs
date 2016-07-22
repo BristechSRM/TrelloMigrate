@@ -11,28 +11,32 @@ let private importProfileAndUpdateIds (profile : ProfileWithHandles) =
     { Profile = updatedProfile
       Handles = profile.Handles |> Array.map (fun handle -> { handle with ProfileId = updatedProfile.Id }) } 
 
-let private importAdmins (wrapper : SrmWrapper) = wrapper.Admins |> Array.map importProfileAndUpdateIds
+let private importSpeakers (sessionsAndSpeakers : SessionAndSpeaker [] ) (adminProfiles : ProfileWithHandles []) = 
 
-let private importSpeakers (wrapper : SrmWrapper) = 
-    let speakerIsAdmin (admins : ProfileWithHandles []) (speaker : ProfileWithHandles) =
-        let foundAdmin = admins |> Array.tryFind (fun admin -> admin.Profile.Forename = speaker.Profile.Forename && admin.Profile.Surname = speaker.Profile.Surname) 
+    let importSpeakerOrUseAdmin (speaker : ProfileWithHandles) =
+        let foundAdmin = adminProfiles |> Array.tryFind (fun admin -> admin.Profile.Forename = speaker.Profile.Forename && admin.Profile.Surname = speaker.Profile.Surname) 
         match foundAdmin with
-        | Some _ -> true
-        | None -> false
-        
-    wrapper.Speakers
-    |> Array.filter (speakerIsAdmin wrapper.Admins >> not)
-    |> Array.map importProfileAndUpdateIds
+        | Some admin -> admin //TODO perform a merge to make sure no information is lost. 
+        | None -> importProfileAndUpdateIds speaker
+
+    sessionsAndSpeakers
+    |> Array.map (fun ss -> 
+        let updatedSpeaker = importSpeakerOrUseAdmin ss.Speaker
+        let updatedSession = {ss.Session with SpeakerId = updatedSpeaker.Profile.Id}
+        {ss with Speaker = updatedSpeaker; Session = updatedSession})        
 
 let private importHandles (profiles : ProfileWithHandles []) = 
-    profiles 
-    |> Array.iter (fun profile -> 
-        profile.Handles |> Array.iter Handle.post )
+    profiles |> Array.iter (fun profile -> profile.Handles |> Array.iter Handle.post)
     
+let private importSessions (sessionsAndSpeakers : SessionAndSpeaker []) = 
+    sessionsAndSpeakers |> Array.map (fun s -> Session.postAndGetId s.Session)
+
 let importAll wrapper = 
-    let importedAdmins = importAdmins wrapper
-    let importedSpeakers = importSpeakers wrapper
+    let importedAdmins = wrapper.Admins |> Array.map importProfileAndUpdateIds
+    let importedSpeakersWithSessions = importSpeakers wrapper.SessionsAndSpeakers importedAdmins
     importHandles importedAdmins
-    importHandles importedSpeakers
+    importHandles (importedSpeakersWithSessions |> Array.map (fun x -> x.Speaker))
+
+    let importedSessions = importSessions importedSpeakersWithSessions
     
     ()
