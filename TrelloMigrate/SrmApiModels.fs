@@ -18,6 +18,10 @@ type ProfileWithHandles =
     { Profile : Profile
       Handles : Handle [] }
 
+type Admin = 
+    { ProfileWithHandles : ProfileWithHandles
+      TrelloMemberId : string }
+
 type Session = 
      { Id : Guid 
        Title : string
@@ -28,10 +32,11 @@ type Session =
        AdminId : Guid option 
        DateAdded : DateTime option }
 
-type SessionAndSpeaker = 
+type SessionSpeakerAndTrelloIds = 
     { Session : Session 
-      Speaker : ProfileWithHandles }
+      Speaker : ProfileWithHandles 
+      AdminTrelloId : string option }
 
 type SrmWrapper = 
-    { Admins : ProfileWithHandles [] 
-      SessionsAndSpeakers : SessionAndSpeaker [] }
+    { Admins : Admin [] 
+      SessionsAndSpeakers : SessionSpeakerAndTrelloIds [] }

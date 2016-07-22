@@ -11,12 +11,15 @@ let private importProfileAndUpdateIds (profile : ProfileWithHandles) =
     { Profile = updatedProfile
       Handles = profile.Handles |> Array.map (fun handle -> { handle with ProfileId = updatedProfile.Id }) } 
 
-let private importSpeakers (sessionsAndSpeakers : SessionAndSpeaker [] ) (adminProfiles : ProfileWithHandles []) = 
+let private importAdmins (admins : Admin []) = 
+    admins |> Array.map (fun admin -> { admin with ProfileWithHandles = importProfileAndUpdateIds admin.ProfileWithHandles })
+
+let private importSpeakers (sessionsAndSpeakers : SessionSpeakerAndTrelloIds [] ) (adminProfiles : Admin []) = 
 
     let importSpeakerOrUseAdmin (speaker : ProfileWithHandles) =
-        let foundAdmin = adminProfiles |> Array.tryFind (fun admin -> admin.Profile.Forename = speaker.Profile.Forename && admin.Profile.Surname = speaker.Profile.Surname) 
+        let foundAdmin = adminProfiles |> Array.tryFind (fun admin -> admin.ProfileWithHandles.Profile.Forename = speaker.Profile.Forename && admin.ProfileWithHandles.Profile.Surname = speaker.Profile.Surname) 
         match foundAdmin with
-        | Some admin -> admin //TODO perform a merge to make sure no information is lost. 
+        | Some admin -> admin.ProfileWithHandles //TODO perform a merge to make sure no information is lost. 
         | None -> importProfileAndUpdateIds speaker
 
     sessionsAndSpeakers
@@ -27,16 +30,27 @@ let private importSpeakers (sessionsAndSpeakers : SessionAndSpeaker [] ) (adminP
 
 let private importHandles (profiles : ProfileWithHandles []) = 
     profiles |> Array.iter (fun profile -> profile.Handles |> Array.iter Handle.post)
+
+let private setAdminIdOnSessions (importedAdmins : Admin []) (ss : SessionSpeakerAndTrelloIds) = 
+    let adminId = 
+        match ss.AdminTrelloId with 
+        | Some trelloId -> 
+            importedAdmins 
+            |> Array.tryPick (fun admin -> if trelloId = admin.TrelloMemberId then Some admin.ProfileWithHandles.Profile.Id else None)
+        | None -> None
+    match adminId with
+    | Some _ -> {ss with Session = {ss.Session with AdminId = adminId; Status = "assigned"}}
+    | None -> {ss with Session = {ss.Session with AdminId = adminId}} 
     
-let private importSessions (sessionsAndSpeakers : SessionAndSpeaker []) = 
+let private importSessions (sessionsAndSpeakers : SessionSpeakerAndTrelloIds []) = 
     sessionsAndSpeakers |> Array.map (fun s -> Session.postAndGetId s.Session)
 
 let importAll wrapper = 
-    let importedAdmins = wrapper.Admins |> Array.map importProfileAndUpdateIds
+    let importedAdmins = importAdmins wrapper.Admins
     let importedSpeakersWithSessions = importSpeakers wrapper.SessionsAndSpeakers importedAdmins
-    importHandles importedAdmins
+    importHandles (importedAdmins |> Array.map (fun x -> x.ProfileWithHandles))
     importHandles (importedSpeakersWithSessions |> Array.map (fun x -> x.Speaker))
 
+    let preparedSessions = importedSpeakersWithSessions |> Array.map (setAdminIdOnSessions importedAdmins)
     let importedSessions = importSessions importedSpeakersWithSessions
-
     ()
