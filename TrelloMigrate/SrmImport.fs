@@ -12,6 +12,7 @@ let private importProfileAndUpdateIds (profile : ProfileWithHandles) =
       Handles = profile.Handles |> Array.map (fun handle -> { handle with ProfileId = updatedProfile.Id }) } 
 
 let private importSpeakers (sessionsAndSpeakers : SessionAndSpeaker [] ) (adminProfiles : ProfileWithHandles []) = 
+
     let importSpeakerOrUseAdmin (speaker : ProfileWithHandles) =
         let foundAdmin = adminProfiles |> Array.tryFind (fun admin -> admin.Profile.Forename = speaker.Profile.Forename && admin.Profile.Surname = speaker.Profile.Surname) 
         match foundAdmin with
