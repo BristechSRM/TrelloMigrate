@@ -20,3 +20,10 @@ module Handle =
 
     let post (handle : Handle) = 
         post endpoint handle |> ignore
+
+module Session = 
+    let endpoint = Uri(sessionsServiceUri, "Sessions")
+
+    let postAndGetId (session : Session) = 
+        let result = post endpoint session
+        { session with Id = parseQuotedGuid result } 
