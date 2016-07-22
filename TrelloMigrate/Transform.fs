@@ -109,5 +109,5 @@ module private SessionAndSpeaker =
 
 //TODO deal with ignored admins when creating sessions
 let toSrmModels (board : BoardSummary) = 
-    { Admins = board.GroupedMembers.Members |> Array.map Admin.createProfileWithHandles
+    { Admins = board.Members |> Array.map Admin.createProfileWithHandles
       SessionsAndSpeakers = board.BasicCards |> Array.choose SessionAndSpeaker.tryCreate }   
