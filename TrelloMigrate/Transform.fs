@@ -56,10 +56,13 @@ module private Admin =
             let lastName = surname.Split() |> Array.last
             sprintf "%c%s@scottlogic.co.uk" firstNameFirstLetter lastName
 
-    let createProfileWithHandles (basicMember : BasicMember) = 
+    let create (basicMember : BasicMember) = 
         let profile = Profile.fromMember basicMember
         let handle = nameToScottLogicEmail profile.Forename profile.Surname |> Handle.createEmailHandle
-        { Profile = profile; Handles = [|handle|] }
+        { ProfileWithHandles = 
+              { Profile = profile
+                Handles = [| handle |] }
+          TrelloMemberId = basicMember.Id }
 
 module private Speaker = 
     let createProfileWithHandles (parsedCard : ParsedCard) = 
@@ -76,7 +79,7 @@ module private Session =
         { Id = Guid.Empty 
           Title = parsedCard.TalkData 
           Description = String.Empty
-          Status = "unassigned" 
+          Status = String.Empty
           Date = None
           SpeakerId = Guid.Empty 
           AdminId = None
@@ -97,17 +100,29 @@ module private SessionAndSpeaker =
             |> Some
         else None
 
+    let tryPickAdminId (admins : Admin []) (card : BasicCard) = 
+        match card.IdMembers with
+        | [||]  -> None
+        | [| memberId |] -> 
+            //If the member isn't in the admin list, it will be ignored. 
+            admins |> Array.tryPick(fun admin -> if admin.TrelloMemberId = memberId then Some admin.TrelloMemberId else None)
+        | _ -> 
+            failwith <| sprintf "Card: %A had multiple members attached. Please remove additional members so that there is one admin per card" card
+
     //Note: Currently ignoring any cards that don't have the title (name) filled out correctly. 
-    let tryCreate (card : BasicCard) = 
+    let tryCreate (admins : Admin []) (card : BasicCard) = 
         match tryParseCardName card.Name with
         | Some parsedCard -> 
             Some { Session = Session.create parsedCard
-                   Speaker = Speaker.createProfileWithHandles parsedCard }
+                   Speaker = Speaker.createProfileWithHandles parsedCard 
+                   AdminTrelloId = tryPickAdminId admins card }
         | None -> 
             printfn "Card with title:\n'%s' \nwas ingored because it did not match the accepted format of \n'speaker name[speakeremail](Talk title, brief or possible topic)" card.Name
             None        
 
 //TODO deal with ignored admins when creating sessions
 let toSrmModels (board : BoardSummary) = 
-    { Admins = board.Members |> Array.map Admin.createProfileWithHandles
-      SessionsAndSpeakers = board.BasicCards |> Array.choose SessionAndSpeaker.tryCreate }   
+    let admins = board.Members |> Array.map Admin.create
+    let sessionsAndSpeakers = board.BasicCards |> Array.choose (SessionAndSpeaker.tryCreate admins)
+    { Admins = admins
+      SessionsAndSpeakers = sessionsAndSpeakers}   
