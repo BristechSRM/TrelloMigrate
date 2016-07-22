@@ -25,4 +25,4 @@ module Session =
     let private endpoint = Uri(sessionsServiceUri, "Sessions")
 
     let postAndGetId (session : Session) = 
-        { session with Id = postAndGetGuid endpoint session} 
+        { session with Id = postAndGetGuid endpoint session } 

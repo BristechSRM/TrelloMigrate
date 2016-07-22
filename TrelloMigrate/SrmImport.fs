@@ -37,14 +37,6 @@ let importAll wrapper =
     importHandles importedAdmins
     importHandles (importedSpeakersWithSessions |> Array.map (fun x -> x.Speaker))
 
-    let preparedSessions = 
-        importedSpeakersWithSessions
-        |> Array.map (fun ss -> 
-            let adminId = None
-            match adminId with
-            | Some _ -> {ss with Session = {ss.Session with AdminId = adminId; Status = "assigned"}}
-            | None -> {ss with Session = {ss.Session with AdminId = adminId}} )
-
-    let importedSessions = importSessions preparedSessions
+    let importedSessions = importSessions importedSpeakersWithSessions
     
     ()
