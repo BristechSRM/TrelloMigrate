@@ -6,4 +6,5 @@ type Names =
 
 type ParsedCard = 
     { SpeakerName : string 
-      SpeakerEmail : string option }
+      SpeakerEmail : string option 
+      TalkData : string }

@@ -62,6 +62,27 @@ module private Admin =
         { Profile = profile; Handles = [|handle|] }
 
 module private Speaker = 
+    let createProfileWithHandles (parsedCard : ParsedCard) = 
+        let speakerProfile = Profile.fromNameString parsedCard.SpeakerName
+        let handles = 
+            match parsedCard.SpeakerEmail with
+            | Some email -> [| Handle.createEmailHandle email |]
+            | None -> [||]
+
+        { Profile = speakerProfile; Handles = handles }
+
+module private Session = 
+    let create (parsedCard : ParsedCard) = 
+        { Id = Guid.Empty 
+          Title = parsedCard.TalkData 
+          Description = String.Empty
+          Status = "unassigned" 
+          Date = None
+          SpeakerId = Guid.Empty 
+          AdminId = None
+          DateAdded = None }
+
+module private SessionAndSpeaker = 
 
     let private tryParseCardName (cardName : string) = 
         let tryGetValue (group : Group) = 
@@ -71,21 +92,17 @@ module private Speaker =
         let m = Regex.Match(cardName, "(?<name>[^\[\]]* *)\[(?<email>.*)\] *\((?<talk>.*)\)(?<extra>.*)?$", RegexOptions.ExplicitCapture)
         if m.Success && m.Groups.["name"].Success && not <| String.IsNullOrWhiteSpace m.Groups.["name"].Value then 
             { SpeakerName = m.Groups.["name"].Value.Trim() 
-              SpeakerEmail = tryGetValue m.Groups.["email"] }
+              SpeakerEmail = tryGetValue m.Groups.["email"] 
+              TalkData = m.Groups.["talk"].Value.Trim() }
             |> Some
         else None
 
     //Note: Currently ignoring any cards that don't have the title (name) filled out correctly. 
-    let tryCreateProfileWithHandles (card : BasicCard) = 
+    let tryCreate (card : BasicCard) = 
         match tryParseCardName card.Name with
-        | Some parseData -> 
-            let speakerProfile = Profile.fromNameString parseData.SpeakerName
-            let handles = 
-                match parseData.SpeakerEmail with
-                | Some email -> [| Handle.createEmailHandle email |]
-                | None -> [||]
-
-            Some { Profile = speakerProfile; Handles = handles }
+        | Some parsedCard -> 
+            Some { Session = Session.create parsedCard
+                   Speaker = Speaker.createProfileWithHandles parsedCard }
         | None -> 
             printfn "Card with title:\n'%s' \nwas ingored because it did not match the accepted format of \n'speaker name[speakeremail](Talk title, brief or possible topic)" card.Name
             None        
@@ -93,4 +110,4 @@ module private Speaker =
 //TODO deal with ignored admins when creating sessions
 let toSrmModels (board : BoardSummary) = 
     { Admins = board.GroupedMembers.Members |> Array.map Admin.createProfileWithHandles
-      Speakers = board.BasicCards |> Array.choose Speaker.tryCreateProfileWithHandles }   
+      SessionsAndSpeakers = board.BasicCards |> Array.choose SessionAndSpeaker.tryCreate }   

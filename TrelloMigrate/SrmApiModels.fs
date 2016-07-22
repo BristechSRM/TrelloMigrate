@@ -28,6 +28,10 @@ type Session =
        AdminId : Guid option 
        DateAdded : DateTime option }
 
+type SessionAndSpeaker = 
+    { Session : Session 
+      Speaker : ProfileWithHandles }
+
 type SrmWrapper = 
     { Admins : ProfileWithHandles [] 
-      Speakers : ProfileWithHandles [] }
+      SessionsAndSpeakers : SessionAndSpeaker [] }
