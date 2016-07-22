@@ -16,7 +16,7 @@ let private importSpeakers (sessionsAndSpeakers : SessionAndSpeaker [] ) (adminP
     let importSpeakerOrUseAdmin (speaker : ProfileWithHandles) =
         let foundAdmin = adminProfiles |> Array.tryFind (fun admin -> admin.Profile.Forename = speaker.Profile.Forename && admin.Profile.Surname = speaker.Profile.Surname) 
         match foundAdmin with
-        | Some admin -> admin
+        | Some admin -> admin //TODO perform a merge to make sure no information is lost. 
         | None -> importProfileAndUpdateIds speaker
 
     sessionsAndSpeakers
