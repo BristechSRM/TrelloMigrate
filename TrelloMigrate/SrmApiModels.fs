@@ -18,6 +18,10 @@ type ProfileWithHandles =
     { Profile : Profile
       Handles : Handle [] }
 
+type ProfileWithReferenceId = 
+    { ReferenceId : string
+      ProfileWithHandles : ProfileWithHandles }
+
 type Session = 
      { Id : Guid 
        Title : string
