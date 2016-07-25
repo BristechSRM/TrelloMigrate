@@ -14,8 +14,10 @@ let private importProfileAndUpdateIds (profile : ProfileWithHandles) =
 let private importProfiles (profiles : Map<string,ProfileWithHandles>) = 
     profiles |> Map.map (fun _ profile -> importProfileAndUpdateIds profile)     
 
-let private importHandles (profiles : ProfileWithHandles []) = 
-    profiles |> Array.iter (fun profile -> profile.Handles |> Array.iter Handle.post)
+let private importHandlesPerProfile (profiles : Map<string,ProfileWithHandles>) = 
+    profiles
+    |> Map.toArray
+    |> Array.iter (fun (_, profile) -> profile.Handles |> Array.iter Handle.post)
 
 let private setSpeakerAndAdminIdsOnSession (importedProfiles : Map<string,ProfileWithHandles>) (ss : SessionAndTrelloReferences) =
     let foundSpeakerId = importedProfiles.[ss.SpeakerTrelloId].Profile.Id
@@ -35,9 +37,7 @@ let private importSessions sessions =
 
 let importAll (wrapper: SrmWrapper) = 
     let importedProfiles = importProfiles wrapper.Profiles
-    importHandles (importedProfiles
-                   |> Map.toArray
-                   |> Array.map (fun (_, profile) -> profile))
+    importHandlesPerProfile importedProfiles
     let preparedSessions = wrapper.Sessions |> Array.map (setSpeakerAndAdminIdsOnSession importedProfiles)
     let importedSessions = importSessions preparedSessions
     ()
