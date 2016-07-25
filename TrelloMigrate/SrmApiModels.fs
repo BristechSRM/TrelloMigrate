@@ -18,10 +18,6 @@ type ProfileWithHandles =
     { Profile : Profile
       Handles : Handle [] }
 
-type Admin = 
-    { ProfileWithHandles : ProfileWithHandles
-      TrelloMemberId : string }
-
 type Session = 
      { Id : Guid 
        Title : string

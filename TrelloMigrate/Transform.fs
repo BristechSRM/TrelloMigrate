@@ -56,7 +56,7 @@ module private Admin =
             let lastName = surname.Split() |> Array.last
             sprintf "%c%s@scottlogic.co.uk" firstNameFirstLetter lastName
 
-    let create (basicMember : BasicMember) = 
+    let create (basicMember : BasicMember) : (string * ProfileWithHandles) = 
         let profile = Profile.fromMember basicMember
         let handle = nameToScottLogicEmail profile.Forename profile.Surname |> Handle.createEmailHandle
         basicMember.Id, { Profile = profile; Handles = [| handle |] }
