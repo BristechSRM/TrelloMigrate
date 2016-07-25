@@ -117,7 +117,7 @@ module private SessionAndSpeaker =
             printfn "Card with title:\n'%s' \nwas ingored because it did not match the accepted format of \n'speaker name[speakeremail](Talk title, brief or possible topic)" card.Name
             None        
 
-let private extractAllProfiles (admins : (string * ProfileWithHandles) []) (sessionsAndSpeakers : SessionSpeakerAndTrelloIds []) =
+let private splitProfilesFromSessions (admins : (string * ProfileWithHandles) []) (sessionsAndSpeakers : SessionSpeakerAndTrelloIds []) =
     //TODO perform a merge of speaker and admin information to make sure no information is lost. Currently extra handles would be dropped. 
     let sessions, nonAdminSpeakerOptions = 
         sessionsAndSpeakers
@@ -137,6 +137,6 @@ let private extractAllProfiles (admins : (string * ProfileWithHandles) []) (sess
 let toSrmModels (board : BoardSummary) = 
     let admins = board.Members |> Array.map Admin.create
     let sessionsAndSpeakers = board.BasicCards |> Array.choose (SessionAndSpeaker.tryCreate admins)
-    let profiles, sessions = extractAllProfiles admins sessionsAndSpeakers
+    let profiles, sessions = splitProfilesFromSessions admins sessionsAndSpeakers
     { Profiles = profiles
       Sessions = sessions }   
