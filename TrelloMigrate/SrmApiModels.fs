@@ -18,9 +18,9 @@ type ProfileWithHandles =
     { Profile : Profile
       Handles : Handle [] }
 
-type Admin = 
-    { ProfileWithHandles : ProfileWithHandles
-      TrelloMemberId : string }
+type ProfileWithReferenceId = 
+    { ReferenceId : string
+      ProfileWithHandles : ProfileWithHandles }
 
 type Session = 
      { Id : Guid 
@@ -35,8 +35,14 @@ type Session =
 type SessionSpeakerAndTrelloIds = 
     { Session : Session 
       Speaker : ProfileWithHandles 
+      CardTrelloId : string
+      AdminTrelloId : string option }
+
+type SessionAndTrelloReferences = 
+    { Session : Session 
+      SpeakerTrelloId : string 
       AdminTrelloId : string option }
 
 type SrmWrapper = 
-    { Admins : Admin [] 
-      SessionsAndSpeakers : SessionSpeakerAndTrelloIds [] }
+    { Profiles : Map<string,ProfileWithHandles>
+      Sessions : SessionAndTrelloReferences [] }
