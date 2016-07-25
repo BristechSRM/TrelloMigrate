@@ -97,29 +97,46 @@ module private SessionAndSpeaker =
             |> Some
         else None
 
-    let tryPickAdminId (admins : Map<string,ProfileWithHandles>) (card : BasicCard) = 
+    let private tryPickAdminId (admins : (string * ProfileWithHandles) []) (card : BasicCard) = 
         match card.IdMembers with
         | [||]  -> None
         | [| memberId |] -> 
             //If the member isn't in the admin list, it will be ignored. 
-            if admins.ContainsKey memberId then Some memberId else None
+            admins |> Array.tryPick(fun (adminId, _)-> if adminId = memberId then Some memberId else None)
         | _ -> 
             failwith <| sprintf "Card: %A had multiple members attached. Please remove additional members so that there is one admin per card" card
 
-    //Note: Currently ignoring any cards that don't have the title (name) filled out correctly. 
-    let tryCreate (admins : Map<string,ProfileWithHandles>) (card : BasicCard) = 
+    let tryCreate (admins : (string * ProfileWithHandles) []) (card : BasicCard) = 
         match tryParseCardName card.Name with
         | Some parsedCard -> 
             Some { Session = Session.create parsedCard
                    Speaker = Speaker.createProfileWithHandles parsedCard 
+                   CardTrelloId = card.Id
                    AdminTrelloId = tryPickAdminId admins card }
         | None -> 
             printfn "Card with title:\n'%s' \nwas ingored because it did not match the accepted format of \n'speaker name[speakeremail](Talk title, brief or possible topic)" card.Name
             None        
 
-//TODO deal with ignored admins when creating sessions
+let private extractAllProfiles (admins : (string * ProfileWithHandles) []) (sessionsAndSpeakers : SessionSpeakerAndTrelloIds []) =
+    //TODO perform a merge of speaker and admin information to make sure no information is lost. Currently extra handles would be dropped. 
+    let sessions, nonAdminSpeakerOptions = 
+        sessionsAndSpeakers
+        |> Array.map (fun ss -> 
+            let foundSpeakerAsAdmin = 
+                admins |> Array.tryFind(fun (_, admin) -> admin.Profile.Forename = ss.Speaker.Profile.Forename && admin.Profile.Surname = ss.Speaker.Profile.Surname)
+            match foundSpeakerAsAdmin with 
+            | Some (adminid, _) -> 
+                {Session = ss.Session; SpeakerTrelloId = adminid; AdminTrelloId = ss.AdminTrelloId}, None
+            | None -> 
+                {Session = ss.Session; SpeakerTrelloId = ss.CardTrelloId; AdminTrelloId = ss.AdminTrelloId}, Some (ss.CardTrelloId, ss.Speaker))
+        |> Array.unzip
+    let nonAdminSpeakers = nonAdminSpeakerOptions |> Array.choose id
+    let profiles = admins |> Array.append nonAdminSpeakers |> Map.ofArray 
+    profiles, sessions
+
 let toSrmModels (board : BoardSummary) = 
-    let admins = board.Members |> Array.map Admin.create |> Map.ofArray
+    let admins = board.Members |> Array.map Admin.create
     let sessionsAndSpeakers = board.BasicCards |> Array.choose (SessionAndSpeaker.tryCreate admins)
-    { Admins = admins
-      SessionsAndSpeakers = sessionsAndSpeakers }   
+    let profiles, sessions = extractAllProfiles admins sessionsAndSpeakers
+    { Profiles = profiles
+      Sessions = sessions }   
