@@ -59,10 +59,7 @@ module private Admin =
     let create (basicMember : BasicMember) = 
         let profile = Profile.fromMember basicMember
         let handle = nameToScottLogicEmail profile.Forename profile.Surname |> Handle.createEmailHandle
-        { ProfileWithHandles = 
-              { Profile = profile
-                Handles = [| handle |] }
-          TrelloMemberId = basicMember.Id }
+        basicMember.Id, { Profile = profile; Handles = [| handle |] }
 
 module private Speaker = 
     let createProfileWithHandles (parsedCard : ParsedCard) = 
@@ -100,17 +97,17 @@ module private SessionAndSpeaker =
             |> Some
         else None
 
-    let tryPickAdminId (admins : Admin []) (card : BasicCard) = 
+    let tryPickAdminId (admins : Map<string,ProfileWithHandles>) (card : BasicCard) = 
         match card.IdMembers with
         | [||]  -> None
         | [| memberId |] -> 
             //If the member isn't in the admin list, it will be ignored. 
-            admins |> Array.tryPick(fun admin -> if admin.TrelloMemberId = memberId then Some admin.TrelloMemberId else None)
+            if admins.ContainsKey memberId then Some memberId else None
         | _ -> 
             failwith <| sprintf "Card: %A had multiple members attached. Please remove additional members so that there is one admin per card" card
 
     //Note: Currently ignoring any cards that don't have the title (name) filled out correctly. 
-    let tryCreate (admins : Admin []) (card : BasicCard) = 
+    let tryCreate (admins : Map<string,ProfileWithHandles>) (card : BasicCard) = 
         match tryParseCardName card.Name with
         | Some parsedCard -> 
             Some { Session = Session.create parsedCard
@@ -122,7 +119,7 @@ module private SessionAndSpeaker =
 
 //TODO deal with ignored admins when creating sessions
 let toSrmModels (board : BoardSummary) = 
-    let admins = board.Members |> Array.map Admin.create
+    let admins = board.Members |> Array.map Admin.create |> Map.ofArray
     let sessionsAndSpeakers = board.BasicCards |> Array.choose (SessionAndSpeaker.tryCreate admins)
     { Admins = admins
-      SessionsAndSpeakers = sessionsAndSpeakers}   
+      SessionsAndSpeakers = sessionsAndSpeakers }   

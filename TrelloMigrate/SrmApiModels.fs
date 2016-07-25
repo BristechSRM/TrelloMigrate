@@ -38,5 +38,5 @@ type SessionSpeakerAndTrelloIds =
       AdminTrelloId : string option }
 
 type SrmWrapper = 
-    { Admins : Admin [] 
+    { Admins : Map<string,ProfileWithHandles>
       SessionsAndSpeakers : SessionSpeakerAndTrelloIds [] }
