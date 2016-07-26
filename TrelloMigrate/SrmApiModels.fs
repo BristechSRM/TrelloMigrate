@@ -32,17 +32,11 @@ type Session =
        AdminId : Guid option 
        DateAdded : DateTime option }
 
-type SessionSpeakerAndTrelloIds = 
-    { Session : Session 
-      Speaker : ProfileWithHandles 
-      CardTrelloId : string
-      AdminTrelloId : string option }
-
-type SessionAndTrelloReferences = 
+type SessionAndReferences = 
     { Session : Session 
       SpeakerTrelloId : string 
       AdminTrelloId : string option }
 
 type SrmWrapper = 
     { Profiles : Map<string,ProfileWithHandles>
-      Sessions : SessionAndTrelloReferences [] }
+      Sessions : SessionAndReferences [] }

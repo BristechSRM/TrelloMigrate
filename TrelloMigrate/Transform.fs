@@ -63,7 +63,7 @@ module private Admin =
           ProfileWithHandles = { Profile = profile; Handles = [| handle |] }}
 
 module private Speaker = 
-    let createProfileWithHandles (parsedCard : ParsedCard) = 
+    let createProfileWithHandles (parsedCard : ParsedCardName) = 
         let speakerProfile = Profile.fromNameString parsedCard.SpeakerName
         let handles = 
             match parsedCard.SpeakerEmail with
@@ -73,7 +73,7 @@ module private Speaker =
         { Profile = speakerProfile; Handles = handles }
 
 module private Session = 
-    let create (parsedCard : ParsedCard) = 
+    let create (parsedCard : ParsedCardName) = 
         { Id = Guid.Empty 
           Title = parsedCard.TalkData 
           Description = String.Empty
@@ -118,7 +118,7 @@ module private SessionAndSpeaker =
             printfn "Card with title:\n'%s' \nwas ingored because it did not match the accepted format of \n'speaker name[speakeremail](Talk title, brief or possible topic)" card.Name
             None        
 
-let private splitProfilesFromSessions (admins : ProfileWithReferenceId []) (sessionsAndSpeakers : SessionSpeakerAndTrelloIds []) =
+let private splitProfilesFromSessions (admins : ProfileWithReferenceId []) (sessionsAndSpeakers : ParsedCard []) =
     //TODO perform a merge of speaker and admin information to make sure no information is lost. Currently extra handles would be dropped. 
     let sessions, nonAdminSpeakerOptions = 
         sessionsAndSpeakers
