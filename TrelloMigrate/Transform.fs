@@ -6,6 +6,10 @@ open SrmApiModels
 open TransformationModels
 open System
 
+module private Handle = 
+    let createEmailHandle (email : string) = 
+        { ProfileId = Guid.NewGuid(); Type = "email"; Identifier = email.ToLowerInvariant() }
+
 module private Profile = 
 
     //Note : Currently failing if any members (Admin) have a missing name
@@ -43,11 +47,7 @@ module private Profile =
         parseFullName fullName
         |> create defaultImageUrl
 
-module private Handle = 
-    let createEmailHandle (email : string) = 
-        { ProfileId = Guid.NewGuid(); Type = "email"; Identifier = email.ToLowerInvariant() }
-
-module private Admin = 
+module private Member = 
     let private nameToScottLogicEmail (forename : string) (surname : string) = 
         if String.IsNullOrWhiteSpace surname then
             forename + "@scottlogic.co.uk"
@@ -56,24 +56,14 @@ module private Admin =
             let lastName = surname.Split() |> Array.last
             sprintf "%c%s@scottlogic.co.uk" firstNameFirstLetter lastName
 
-    let create (basicMember : BasicMember) : ProfileWithReferenceId = 
+    let createProfileWithReferenceId (basicMember : BasicMember) : ProfileWithReferenceId = 
         let profile = Profile.fromMember basicMember
         let handle = nameToScottLogicEmail profile.Forename profile.Surname |> Handle.createEmailHandle
         { ReferenceId = basicMember.Id
           ProfileWithHandles = { Profile = profile; Handles = [| handle |] }}
 
-module private Speaker = 
-    let createProfileWithHandles (parsedCard : ParsedCard) = 
-        let speakerProfile = Profile.fromNameString parsedCard.SpeakerName
-        let handles = 
-            match parsedCard.SpeakerEmail with
-            | Some email -> [| Handle.createEmailHandle email |]
-            | None -> [||]
-
-        { Profile = speakerProfile; Handles = handles }
-
-module private Session = 
-    let create (parsedCard : ParsedCard) = 
+module private ParsedCard = 
+    let createSession (parsedCard : ParsedCard) = 
         { Id = Guid.Empty 
           Title = parsedCard.TalkData 
           Description = String.Empty
@@ -83,7 +73,16 @@ module private Session =
           AdminId = None
           DateAdded = None }
 
-module private SessionAndSpeaker = 
+    let createSpeakerProfileWithHandles (parsedCard : ParsedCard) = 
+        let speakerProfile = Profile.fromNameString parsedCard.SpeakerName
+        let handles = 
+            match parsedCard.SpeakerEmail with
+            | Some email -> [| Handle.createEmailHandle email |]
+            | None -> [||]
+
+        { Profile = speakerProfile; Handles = handles }
+
+module private Card = 
 
     let private tryParseCardName (cardName : string) = 
         let tryGetValue (group : Group) = 
@@ -107,11 +106,11 @@ module private SessionAndSpeaker =
         | _ -> 
             failwith <| sprintf "Card: %A had multiple members attached. Please remove additional members so that there is one admin per card" card
 
-    let tryCreate (admins : ProfileWithReferenceId []) (card : BasicCard) = 
+    let tryParseToSessionAndSpeaker (admins : ProfileWithReferenceId []) (card : BasicCard) = 
         match tryParseCardName card.Name with
         | Some parsedCard -> 
-            Some { Session = Session.create parsedCard
-                   Speaker = Speaker.createProfileWithHandles parsedCard 
+            Some { Session = ParsedCard.createSession parsedCard
+                   Speaker = ParsedCard.createSpeakerProfileWithHandles parsedCard 
                    CardTrelloId = card.Id
                    AdminTrelloId = tryPickAdminId admins card }
         | None -> 
@@ -136,8 +135,8 @@ let private splitProfilesFromSessions (admins : ProfileWithReferenceId []) (sess
     profiles, sessions
 
 let toSrmModels (board : BoardSummary) = 
-    let admins = board.Members |> Array.map Admin.create
-    let sessionsAndSpeakers = board.BasicCards |> Array.choose (SessionAndSpeaker.tryCreate admins)
-    let profiles, sessions = splitProfilesFromSessions admins sessionsAndSpeakers
+    let adminProfiles = board.Members |> Array.map Member.createProfileWithReferenceId
+    let sessionsAndSpeakers = board.BasicCards |> Array.choose (Card.tryParseToSessionAndSpeaker adminProfiles)
+    let profiles, sessions = splitProfilesFromSessions adminProfiles sessionsAndSpeakers
     { Profiles = profiles
       Sessions = sessions }   
