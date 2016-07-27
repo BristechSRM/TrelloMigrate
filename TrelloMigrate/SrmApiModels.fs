@@ -37,6 +37,23 @@ type SessionAndReferences =
       SpeakerTrelloId : string 
       AdminTrelloId : string option }
 
+type CorrespondenceItem =
+    { Id : Guid
+      ExternalId : string
+      SenderId : Guid
+      ReceiverId : Guid 
+      Date : DateTime 
+      Message : string
+      Type : string
+      SenderHandle : string
+      ReceiverHandle : string }
+
+type CorrespondenceWithReferences = 
+    { Item : CorrespondenceItem 
+      SenderTrelloId : string
+      ReceiverTrelloId : string }
+
 type SrmWrapper = 
-    { Profiles : Map<string,ProfileWithHandles>
+    { Correspondence : CorrespondenceWithReferences []
+      Profiles : Map<string,ProfileWithHandles>
       Sessions : SessionAndReferences [] }

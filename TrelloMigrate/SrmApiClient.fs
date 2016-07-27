@@ -26,3 +26,9 @@ module Session =
 
     let postAndGetId (session : Session) = 
         { session with Id = postAndGetGuid endpoint session } 
+
+module Correspondence = 
+    let private endpoint = Uri(commsServiceUri, "Correspondence")
+
+    let post (item : CorrespondenceItem) = 
+        post endpoint item |> ignore

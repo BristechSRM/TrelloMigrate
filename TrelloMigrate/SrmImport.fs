@@ -19,10 +19,10 @@ let private importHandlesPerProfile (profiles : Map<string,ProfileWithHandles>) 
     |> Map.toArray
     |> Array.iter (fun (_, profile) -> profile.Handles |> Array.iter Handle.post)
 
-let private setSpeakerAndAdminIdsOnSession (importedProfiles : Map<string,ProfileWithHandles>) (ss : SessionAndReferences) =
-    let foundSpeakerId = importedProfiles.[ss.SpeakerTrelloId].Profile.Id
+let private setSpeakerAndAdminIdsOnSession (importedProfiles : Map<string,ProfileWithHandles>) (sr : SessionAndReferences) =
+    let foundSpeakerId = importedProfiles.[sr.SpeakerTrelloId].Profile.Id
     let foundAdminId = 
-        match ss.AdminTrelloId with 
+        match sr.AdminTrelloId with 
         | Some trelloId -> Some importedProfiles.[trelloId].Profile.Id
         | None -> None
     let status = 
@@ -30,14 +30,23 @@ let private setSpeakerAndAdminIdsOnSession (importedProfiles : Map<string,Profil
         | Some _ -> "assigned"
         | None -> "unassigned" 
 
-    {ss.Session with SpeakerId = foundSpeakerId; AdminId = foundAdminId; Status = status}
+    {sr.Session with SpeakerId = foundSpeakerId; AdminId = foundAdminId; Status = status}
     
 let private importSessions sessions = 
     sessions |> Array.map Session.postAndGetId
+
+let private setSenderAndReceiverOnCorrespondence (importedProfiles : Map<string,ProfileWithHandles>) (cr : CorrespondenceWithReferences) =
+    { cr.Item with SenderId = importedProfiles.[cr.SenderTrelloId].Profile.Id
+                   ReceiverId = importedProfiles.[cr.ReceiverTrelloId].Profile.Id }
+
+let private importCorrespondence correspondence = 
+    correspondence |> Array.iter Correspondence.post
 
 let importAll (wrapper: SrmWrapper) = 
     let importedProfiles = importProfiles wrapper.Profiles
     importHandlesPerProfile importedProfiles
     let preparedSessions = wrapper.Sessions |> Array.map (setSpeakerAndAdminIdsOnSession importedProfiles)
     let importedSessions = importSessions preparedSessions
+    let preparedCorrespondence = wrapper.Correspondence |> Array.map (setSenderAndReceiverOnCorrespondence importedProfiles)
+    importCorrespondence preparedCorrespondence
     ()
