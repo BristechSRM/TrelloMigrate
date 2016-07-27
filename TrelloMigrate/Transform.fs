@@ -151,8 +151,8 @@ module private Correspondence =
             with
             | ex -> failwith <| sprintf "Parsing date for correspondence action: '%s' failed with exception: %A" actionText ex
 
-    let private selectSenderAndReceiver (actionText : string) (dirString : string) speakerValue adminValue = 
-        match dirString.ToUpperInvariant() with
+    let private selectSenderAndReceiver (actionText : string) (direction : string) speakerValue adminValue = 
+        match direction.ToUpperInvariant() with
         | "SEND" -> adminValue, speakerValue
         | "RECEIVE" | "RECIEVE" -> speakerValue, adminValue
         | _ -> failwith <| sprintf "Parsing directon for correspondence action: '%s' failed" actionText
