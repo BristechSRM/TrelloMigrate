@@ -107,7 +107,7 @@ module private SessionAndSpeaker =
         | _ -> 
             failwith <| sprintf "Card: %A had multiple members attached. Please remove additional members so that there is one admin per card" card
 
-    let tryCreate (admins : ProfileWithReferenceId []) (card : BasicCard) = 
+    let tryParseFromCard (admins : ProfileWithReferenceId []) (card : BasicCard) = 
         match tryParseCardName card.Name with
         | Some parsedCard -> 
             Some { Session = Session.create parsedCard
@@ -118,26 +118,92 @@ module private SessionAndSpeaker =
             printfn "Card with title:\n'%s' \nwas ingored because it did not match the accepted format of \n'speaker name[speakeremail](Talk title, brief or possible topic)" card.Name
             None        
 
-let private splitProfilesFromSessions (admins : ProfileWithReferenceId []) (parsedCards : ParsedCard []) =
-    //TODO perform a merge of speaker and admin information to make sure no information is lost. Currently extra handles would be dropped. 
-    let sessions, nonAdminSpeakerOptions = 
-        parsedCards
-        |> Array.map (fun ss -> 
-            let foundSpeakerAsAdmin = 
-                admins |> Array.tryFind(fun a -> a.ProfileWithHandles.Profile.Forename = ss.Speaker.Profile.Forename && a.ProfileWithHandles.Profile.Surname = ss.Speaker.Profile.Surname)
-            match foundSpeakerAsAdmin with 
-            | Some adminWithRef -> 
-                {Session = ss.Session; SpeakerTrelloId = adminWithRef.ReferenceId; AdminTrelloId = ss.AdminTrelloId}, None
+    let splitProfilesFromSessions (admins : ProfileWithReferenceId []) (parsedCards : ParsedCard []) =
+        //TODO perform a merge of speaker and admin information to make sure no information is lost. Currently extra handles would be dropped. 
+        let sessions, nonAdminSpeakerOptions = 
+            parsedCards
+            |> Array.map (fun ss -> 
+                let foundSpeakerAsAdmin = 
+                    admins |> Array.tryFind(fun a -> a.ProfileWithHandles.Profile.Forename = ss.Speaker.Profile.Forename && a.ProfileWithHandles.Profile.Surname = ss.Speaker.Profile.Surname)
+                match foundSpeakerAsAdmin with 
+                | Some adminWithRef -> 
+                    {Session = ss.Session; SpeakerTrelloId = adminWithRef.ReferenceId; AdminTrelloId = ss.AdminTrelloId}, None
+                | None -> 
+                    {Session = ss.Session; SpeakerTrelloId = ss.CardTrelloId; AdminTrelloId = ss.AdminTrelloId}, Some {ReferenceId = ss.CardTrelloId; ProfileWithHandles = ss.Speaker})
+            |> Array.unzip
+        let nonAdminSpeakers = nonAdminSpeakerOptions |> Array.choose id
+        let profiles = admins |> Array.append nonAdminSpeakers |> Array.map(fun pri -> pri.ReferenceId, pri.ProfileWithHandles) |> Map.ofArray
+        profiles, sessions
+
+module private Correspondence = 
+    open System.Globalization
+
+    let private tryGetEmailFromProfile (profile : ProfileWithHandles) = 
+        profile.Handles |> Array.tryPick (fun h -> if h.Type = "email" then Some h.Identifier else None)
+
+    let private parseDate (actionText : string) (dateString : string) = 
+        //Workaround for data error + mono bug
+        let success, exactDate = 
+            DateTime.TryParseExact(dateString, [| "dd/mm/yy"; "dd/mm/yyyy"; "dd.mm.yy"; "dd.mm.yyyy"; "dd/mm.yyyy"; "dd.mm/yyyy" |], CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal)
+        if success then exactDate
+        else 
+            try
+                DateTime.Parse(dateString, CultureInfo.InvariantCulture)
+            with
+            | ex -> failwith <| sprintf "Parsing date for correspondence action: '%s' failed with exception: %A" actionText ex
+
+    let private selectSenderAndReceiver (actionText : string) (dirString : string) speakerValue adminValue = 
+        match dirString.ToUpperInvariant() with
+        | "SEND" -> adminValue, speakerValue
+        | "RECEIVE" | "RECIEVE" -> speakerValue, adminValue
+        | _ -> failwith <| sprintf "Parsing directon for correspondence action: '%s' failed" actionText
+
+    let private tryCreateCorrespondence (cardTitle : string) (speakerRefId : string) (speakerEmail : string) (adminRefIdOption : string option) (adminEmailOption : string option) (action : BasicAction) = 
+        let m = Regex.Match(action.Data.Text, "\[(?<date>[0-9\/\.]+) - (?<direction>[a-zA-Z]+)\](?<message>.*)$", RegexOptions.ExplicitCapture ||| RegexOptions.Singleline)
+        if m.Success then 
+            match adminEmailOption, adminRefIdOption with
+            | Some adminEmail, Some adminRefId  ->                 
+                let senderEmail, receiverEmail = selectSenderAndReceiver action.Data.Text (m.Groups.["direction"].Value) speakerEmail adminEmail
+                let senderTrelloId, receiverTrelloId = selectSenderAndReceiver action.Data.Text (m.Groups.["direction"].Value) speakerRefId adminRefId
+                let item =                     
+                    { Id = Guid.Empty 
+                      ExternalId = sprintf "Trello:%A:%s:%s" (Guid.NewGuid()) senderEmail receiverEmail
+                      SenderId = Guid.Empty
+                      ReceiverId = Guid.Empty
+                      Type = "email"
+                      SenderHandle = senderEmail
+                      ReceiverHandle = receiverEmail
+                      Date = parseDate action.Data.Text m.Groups.["date"].Value
+                      Message = m.Groups.["message"].Value }
+
+                Some { Item = item; SenderTrelloId = senderTrelloId; ReceiverTrelloId = receiverTrelloId}
+            | _ -> failwith <| sprintf "Card: '%s' has correspondence comments, but no admin or adminEmail. An Admin is required for correspondence to be processed." cardTitle
+        else 
+            None
+
+    let parseActionsPerSession (profiles : Map<string, ProfileWithHandles>) (cardActions : Map<string, BasicAction []>) (sr : SessionAndReferences) = 
+        match cardActions.TryFind(sr.SpeakerTrelloId) with
+        | Some cardActions -> 
+            let speakerEmailOption = profiles.[sr.SpeakerTrelloId] |> tryGetEmailFromProfile
+            let adminEmailOption = sr.AdminTrelloId |> Option.bind(fun pid -> tryGetEmailFromProfile profiles.[pid])
+            match speakerEmailOption with
+            | Some speakerEmail -> 
+                cardActions |> Array.choose (tryCreateCorrespondence sr.Session.Title sr.SpeakerTrelloId speakerEmail sr.AdminTrelloId adminEmailOption)
             | None -> 
-                {Session = ss.Session; SpeakerTrelloId = ss.CardTrelloId; AdminTrelloId = ss.AdminTrelloId}, Some {ReferenceId = ss.CardTrelloId; ProfileWithHandles = ss.Speaker})
-        |> Array.unzip
-    let nonAdminSpeakers = nonAdminSpeakerOptions |> Array.choose id
-    let profiles = admins |> Array.append nonAdminSpeakers |> Array.map(fun pri -> pri.ReferenceId, pri.ProfileWithHandles) |> Map.ofArray
-    profiles, sessions
+                printfn "Card: '%s' has possible correspondence comments, but no speakerEmail. Correspondence will not be processed." sr.Session.Title
+                [||]
+        | None -> [||] 
+
+    let parseActions (sessions : SessionAndReferences []) (profiles : Map<string, ProfileWithHandles>) (cardActions : Map<string, BasicAction []>) = 
+        sessions 
+        |> Array.map (parseActionsPerSession profiles cardActions)    
+        |> Array.concat
 
 let toSrmModels (board : BoardSummary) = 
     let admins = board.Members |> Array.map Admin.create
-    let parsedCards = board.BasicCards |> Array.choose (SessionAndSpeaker.tryCreate admins)
-    let profiles, sessions = splitProfilesFromSessions admins parsedCards
-    { Profiles = profiles
+    let parsedCards = board.BasicCards |> Array.choose (SessionAndSpeaker.tryParseFromCard admins)
+    let profiles, sessions = SessionAndSpeaker.splitProfilesFromSessions admins parsedCards
+    let correspondence = Correspondence.parseActions sessions profiles board.CardActions
+    { Correspondence = correspondence
+      Profiles = profiles
       Sessions = sessions }   
