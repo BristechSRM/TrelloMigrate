@@ -21,7 +21,8 @@ let private getBasicActionsByCardId trelloCred (cardId : string) =
     |> JsonHttpClient.get<BasicAction []>
 
 let getBoardSummary trelloCred = 
-    let basicCards = getBasicCards trelloCred    
+    let basicCards = getBasicCards trelloCred
+    
     let cardActions = 
         basicCards
         |> Array.map (fun card -> card.Id, getBasicActionsByCardId trelloCred card.Id)

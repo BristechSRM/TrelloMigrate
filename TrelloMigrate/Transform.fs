@@ -1,11 +1,11 @@
 ﻿module Transform
 
+open SrmApiModels
+open System
 open System.Globalization
 open System.Text.RegularExpressions
-open TrelloModels
-open SrmApiModels
 open TransformationModels
-open System
+open TrelloModels
 
 module private Profile = 
 
@@ -36,17 +36,15 @@ module private Profile =
           ImageUrl = imageUrl
           Bio = String.Empty }
 
-    let fromMember (basicMember : BasicMember) = 
-        parseFullName basicMember.FullName
-        |> create (getImageUrl basicMember.AvatarHash)
+    let fromMember (basicMember : BasicMember) = parseFullName basicMember.FullName |> create (getImageUrl basicMember.AvatarHash)
 
-    let fromNameString (fullName : string) = 
-        parseFullName fullName
-        |> create defaultImageUrl
+    let fromNameString (fullName : string) = parseFullName fullName |> create defaultImageUrl
 
 module private Handle = 
     let createEmailHandle (email : string) = 
-        { ProfileId = Guid.NewGuid(); Type = "email"; Identifier = email.ToLowerInvariant() }
+        { ProfileId = Guid.NewGuid()
+          Type = "email"
+          Identifier = email.ToLowerInvariant() }
 
 module private Admin = 
     let private nameToScottLogicEmail (forename : string) (surname : string) = 
@@ -61,17 +59,20 @@ module private Admin =
         let profile = Profile.fromMember basicMember
         let handle = nameToScottLogicEmail profile.Forename profile.Surname |> Handle.createEmailHandle
         { ReferenceId = basicMember.Id
-          ProfileWithHandles = { Profile = profile; Handles = [| handle |] }}
+          ProfileWithHandles = 
+              { Profile = profile
+                Handles = [| handle |] } }
 
 module private Speaker = 
     let createProfileWithHandles (parsedCardName : ParsedCardName) = 
         let speakerProfile = Profile.fromNameString parsedCardName.SpeakerName
+        
         let handles = 
             match parsedCardName.SpeakerEmail with
             | Some email -> [| Handle.createEmailHandle email |]
             | None -> [||]
-
-        { Profile = speakerProfile; Handles = handles }
+        { Profile = speakerProfile
+          Handles = handles }
 
 module private Session = 
     let create (parsedCardName : ParsedCardName) = 
@@ -112,7 +113,7 @@ module private SessionAndSpeaker =
         match tryParseCardName card.Name with
         | Some parsedCard -> 
             Some { Session = Session.create parsedCard
-                   Speaker = Speaker.createProfileWithHandles parsedCard 
+                   Speaker = Speaker.createProfileWithHandles parsedCard
                    CardTrelloId = card.Id
                    AdminTrelloId = tryPickAdminId admins card }
         | None -> 
@@ -144,7 +145,8 @@ module private Correspondence =
         //Workaround for data error + mono bug
         let success, exactDate = 
             DateTime.TryParseExact(dateString, [| "dd/mm/yy"; "dd/mm/yyyy"; "dd.mm.yy"; "dd.mm.yyyy"; "dd/mm.yyyy"; "dd.mm/yyyy" |], CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal)
-        if success then exactDate
+        if success then 
+            exactDate
         else 
             try
                 DateTime.Parse(dateString, CultureInfo.InvariantCulture)
@@ -184,18 +186,17 @@ module private Correspondence =
         match cardActions.TryFind(sr.SpeakerTrelloId) with
         | Some cardActions -> 
             let speakerEmailOption = profiles.[sr.SpeakerTrelloId] |> tryGetEmailFromProfile
-            let adminEmailOption = sr.AdminTrelloId |> Option.bind(fun pid -> tryGetEmailFromProfile profiles.[pid])
+            let adminEmailOption = sr.AdminTrelloId |> Option.bind (fun pid -> tryGetEmailFromProfile profiles.[pid])
             match speakerEmailOption with
-            | Some speakerEmail -> 
-                cardActions |> Array.choose (tryCreateCorrespondence sr.Session.Title sr.SpeakerTrelloId speakerEmail sr.AdminTrelloId adminEmailOption)
+            | Some speakerEmail -> cardActions |> Array.choose (tryCreateCorrespondence sr.Session.Title sr.SpeakerTrelloId speakerEmail sr.AdminTrelloId adminEmailOption)
             | None -> 
                 printfn "Card: '%s' has possible correspondence comments, but no speakerEmail. Correspondence will not be processed." sr.Session.Title
                 [||]
         | None -> [||] 
 
     let parseActions (sessions : SessionAndReferences []) (profiles : Map<string, ProfileWithHandles>) (cardActions : Map<string, BasicAction []>) = 
-        sessions 
-        |> Array.map (parseActionsPerSession profiles cardActions)    
+        sessions
+        |> Array.map (parseActionsPerSession profiles cardActions)
         |> Array.concat
 
 let toSrmModels (board : BoardSummary) = 

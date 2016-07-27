@@ -1,9 +1,9 @@
 ﻿module JsonHttpClient
 
+open Newtonsoft.Json
 open System
 open System.Net
 open System.Net.Http
-open Newtonsoft.Json
 open System.Text
 
 let get<'Model> (uri : Uri) = 
