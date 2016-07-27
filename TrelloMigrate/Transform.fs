@@ -63,19 +63,19 @@ module private Admin =
           ProfileWithHandles = { Profile = profile; Handles = [| handle |] }}
 
 module private Speaker = 
-    let createProfileWithHandles (parsedCard : ParsedCardName) = 
-        let speakerProfile = Profile.fromNameString parsedCard.SpeakerName
+    let createProfileWithHandles (parsedCardName : ParsedCardName) = 
+        let speakerProfile = Profile.fromNameString parsedCardName.SpeakerName
         let handles = 
-            match parsedCard.SpeakerEmail with
+            match parsedCardName.SpeakerEmail with
             | Some email -> [| Handle.createEmailHandle email |]
             | None -> [||]
 
         { Profile = speakerProfile; Handles = handles }
 
 module private Session = 
-    let create (parsedCard : ParsedCardName) = 
+    let create (parsedCardName : ParsedCardName) = 
         { Id = Guid.Empty 
-          Title = parsedCard.TalkData 
+          Title = parsedCardName.TalkData 
           Description = String.Empty
           Status = String.Empty
           Date = None
@@ -118,10 +118,10 @@ module private SessionAndSpeaker =
             printfn "Card with title:\n'%s' \nwas ingored because it did not match the accepted format of \n'speaker name[speakeremail](Talk title, brief or possible topic)" card.Name
             None        
 
-    let splitProfilesFromSessions (admins : ProfileWithReferenceId []) (sessionsAndSpeakers : ParsedCard []) =
+    let splitProfilesFromSessions (admins : ProfileWithReferenceId []) (parsedCards : ParsedCard []) =
         //TODO perform a merge of speaker and admin information to make sure no information is lost. Currently extra handles would be dropped. 
         let sessions, nonAdminSpeakerOptions = 
-            sessionsAndSpeakers
+            parsedCards
             |> Array.map (fun ss -> 
                 let foundSpeakerAsAdmin = 
                     admins |> Array.tryFind(fun a -> a.ProfileWithHandles.Profile.Forename = ss.Speaker.Profile.Forename && a.ProfileWithHandles.Profile.Surname = ss.Speaker.Profile.Surname)
@@ -201,8 +201,8 @@ module private Correspondence =
 
 let toSrmModels (board : BoardSummary) = 
     let admins = board.Members |> Array.map Admin.create
-    let sessionsAndSpeakers = board.BasicCards |> Array.choose (SessionAndSpeaker.tryParseFromCard admins)
-    let profiles, sessions = SessionAndSpeaker.splitProfilesFromSessions admins sessionsAndSpeakers
+    let parsedCards = board.BasicCards |> Array.choose (SessionAndSpeaker.tryParseFromCard admins)
+    let profiles, sessions = SessionAndSpeaker.splitProfilesFromSessions admins parsedCards
     let correspondence = Correspondence.parseActions sessions profiles board.CardActions
     { Correspondence = correspondence
       Profiles = profiles
