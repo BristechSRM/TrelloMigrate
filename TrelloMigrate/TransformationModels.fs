@@ -1,4 +1,5 @@
 ﻿module TransformationModels
+
 open SrmApiModels
 
 type Names = 
@@ -6,12 +7,12 @@ type Names =
       Surname : string }
 
 type ParsedCardName = 
-    { SpeakerName : string 
-      SpeakerEmail : string option 
+    { SpeakerName : string
+      SpeakerEmail : string option
       TalkData : string }
 
 type ParsedCard = 
-    { Session : Session 
-      Speaker : ProfileWithHandles 
+    { Session : Session
+      Speaker : ProfileWithHandles
       CardTrelloId : string
       AdminTrelloId : string option }

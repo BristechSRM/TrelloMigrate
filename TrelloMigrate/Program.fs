@@ -1,8 +1,8 @@
-﻿open System.IO
-open Newtonsoft.Json
+﻿open Newtonsoft.Json
+open System.IO
 
 [<EntryPoint>]
-let main argv = 
+let main _ = 
     let saveData path data = 
         let result = JsonConvert.SerializeObject(data, Formatting.Indented)
         File.WriteAllText(path, result)

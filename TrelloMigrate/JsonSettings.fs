@@ -1,7 +1,7 @@
 ﻿module JsonSettings
 
-open Newtonsoft.Json
 open JsonConverters
+open Newtonsoft.Json
 
 let setDefaults () = 
     JsonConvert.DefaultSettings <- (fun () -> 
