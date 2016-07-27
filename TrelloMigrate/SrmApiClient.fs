@@ -3,11 +3,12 @@
 open Config
 open System
 open SrmApiModels
-open JsonHttpClient
 
 let private parseQuotedGuid (guidString : string) = Guid.Parse(guidString.Replace("\"",""))
 
-let postAndGetGuid uri data = post uri data |> parseQuotedGuid
+let private postAndGetGuid uri data = JsonHttpClient.post uri data |> parseQuotedGuid
+
+let private post uri data = JsonHttpClient.post uri data |> ignore
 
 module Profile = 
     let private endpoint = Uri(sessionsServiceUri, "Profiles")
@@ -19,16 +20,16 @@ module Handle =
     let private endpoint = Uri(sessionsServiceUri, "Handles")
 
     let post (handle : Handle) = 
-        post endpoint handle |> ignore
+        post endpoint handle
 
 module Session = 
     let private endpoint = Uri(sessionsServiceUri, "Sessions")
 
-    let postAndGetId (session : Session) = 
-        { session with Id = postAndGetGuid endpoint session } 
+    let post (session : Session) = 
+        post endpoint session
 
 module Correspondence = 
     let private endpoint = Uri(commsServiceUri, "Correspondence")
 
     let post (item : CorrespondenceItem) = 
-        post endpoint item |> ignore
+        post endpoint item
