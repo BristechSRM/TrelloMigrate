@@ -29,4 +29,3 @@ let post (uri : Uri) (data : 'Model) =
         let errorMessage = response.Content.ReadAsStringAsync().Result
         let modelName = typeof<'Model>.Name
         failwith <| sprintf "Error in post request for %s. Status code: %i. Reason phrase: %s. Error Message: %s" modelName (int (errorCode)) response.ReasonPhrase errorMessage
-
