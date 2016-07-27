@@ -137,7 +137,7 @@ let private splitProfilesFromSessions (admins : ProfileWithReferenceId []) (pars
 
 let toSrmModels (board : BoardSummary) = 
     let admins = board.Members |> Array.map Admin.create
-    let sessionsAndSpeakers = board.BasicCards |> Array.choose (SessionAndSpeaker.tryCreate admins)
-    let profiles, sessions = splitProfilesFromSessions admins sessionsAndSpeakers
+    let parsedCards = board.BasicCards |> Array.choose (SessionAndSpeaker.tryCreate admins)
+    let profiles, sessions = splitProfilesFromSessions admins parsedCards
     { Profiles = profiles
       Sessions = sessions }   
