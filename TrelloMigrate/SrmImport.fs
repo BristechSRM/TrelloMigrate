@@ -33,7 +33,7 @@ let private setSpeakerAndAdminIdsOnSession (importedProfiles : Map<string,Profil
     {sr.Session with SpeakerId = foundSpeakerId; AdminId = foundAdminId; Status = status}
     
 let private importSessions sessions = 
-    sessions |> Array.map Session.postAndGetId
+    sessions |> Array.iter Session.post
 
 let private setSenderAndReceiverOnCorrespondence (importedProfiles : Map<string,ProfileWithHandles>) (cr : CorrespondenceWithReferences) =
     { cr.Item with SenderId = importedProfiles.[cr.SenderTrelloId].Profile.Id
@@ -46,7 +46,7 @@ let importAll (wrapper: SrmWrapper) =
     let importedProfiles = importProfiles wrapper.Profiles
     importHandlesPerProfile importedProfiles
     let preparedSessions = wrapper.Sessions |> Array.map (setSpeakerAndAdminIdsOnSession importedProfiles)
-    let importedSessions = importSessions preparedSessions
+    importSessions preparedSessions
     let preparedCorrespondence = wrapper.Correspondence |> Array.map (setSenderAndReceiverOnCorrespondence importedProfiles)
     importCorrespondence preparedCorrespondence
     ()
