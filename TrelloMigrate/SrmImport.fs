@@ -19,7 +19,7 @@ let private importHandlesPerProfile (profiles : Map<string,ProfileWithHandles>) 
     |> Map.toArray
     |> Array.iter (fun (_, profile) -> profile.Handles |> Array.iter Handle.post)
 
-let private setSpeakerAndAdminIdsOnSession (importedProfiles : Map<string,ProfileWithHandles>) (ss : SessionAndTrelloReferences) =
+let private setSpeakerAndAdminIdsOnSession (importedProfiles : Map<string,ProfileWithHandles>) (ss : SessionAndReferences) =
     let foundSpeakerId = importedProfiles.[ss.SpeakerTrelloId].Profile.Id
     let foundAdminId = 
         match ss.AdminTrelloId with 
