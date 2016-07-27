@@ -13,6 +13,15 @@ type BasicMember =
       FullName : string
       AvatarHash : string }
 
+type ActionData = 
+    { Text : string }
+
+type BasicAction = 
+    { Id : string
+      Data : ActionData
+      Type : string }
+
 type BoardSummary = 
     { BasicCards : BasicCard [] 
+      CardActions : Map<string, BasicAction []>
       Members : BasicMember [] }
