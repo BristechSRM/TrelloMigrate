@@ -186,9 +186,10 @@ module private Correspondence =
         match cardActions.TryFind(sr.SpeakerTrelloId) with
         | Some cardActions -> 
             let speakerEmailOption = profiles.[sr.SpeakerTrelloId] |> tryGetEmailFromProfile
-            let adminEmailOption = sr.AdminTrelloId |> Option.bind (fun pid -> tryGetEmailFromProfile profiles.[pid])
             match speakerEmailOption with
-            | Some speakerEmail -> cardActions |> Array.choose (tryCreateCorrespondence sr.Session.Title sr.SpeakerTrelloId speakerEmail sr.AdminTrelloId adminEmailOption)
+            | Some speakerEmail -> 
+                let adminEmailOption = sr.AdminTrelloId |> Option.bind (fun pid -> tryGetEmailFromProfile profiles.[pid])
+                cardActions |> Array.choose (tryCreateCorrespondence sr.Session.Title sr.SpeakerTrelloId speakerEmail sr.AdminTrelloId adminEmailOption)
             | None -> 
                 printfn "Card: '%s' has possible correspondence comments, but no speakerEmail. Correspondence will not be processed." sr.Session.Title
                 [||]
