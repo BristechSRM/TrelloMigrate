@@ -75,12 +75,19 @@ module private Speaker =
           Handles = handles }
 
 module private Session = 
-    let create (parsedCardName : ParsedCardName) = 
+    //Accept date if it is on the first Thursday of the month. 
+    let useDateIfEventDate (date : DateTime) = 
+        if date.DayOfWeek = DayOfWeek.Thursday && date.Day <= 7 then
+            Some date
+        else 
+            None
+
+    let create (parsedCardName : ParsedCardName) (cardDate : DateTime option) = 
         { Id = Guid.Empty 
           Title = parsedCardName.TalkData 
           Description = String.Empty
           Status = String.Empty
-          Date = None
+          Date = cardDate |> Option.bind useDateIfEventDate
           SpeakerId = Guid.Empty 
           AdminId = None
           DateAdded = None }
@@ -112,7 +119,7 @@ module private SessionAndSpeaker =
     let tryParseFromCard (admins : ProfileWithReferenceId []) (card : BasicCard) = 
         match tryParseCardName card.Name with
         | Some parsedCard -> 
-            Some { Session = Session.create parsedCard
+            Some { Session = Session.create parsedCard card.Due
                    Speaker = Speaker.createProfileWithHandles parsedCard
                    CardTrelloId = card.Id
                    AdminTrelloId = tryPickAdminId admins card }
