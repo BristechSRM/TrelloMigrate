@@ -47,6 +47,7 @@ module private Handle =
           Identifier = email.ToLowerInvariant() }
 
 module private Admin = 
+    //TODO use external list of emails / handles for admins, as not all admins are from scott logic. 
     let private nameToScottLogicEmail (forename : string) (surname : string) = 
         if String.IsNullOrWhiteSpace surname then
             forename + "@scottlogic.co.uk"
