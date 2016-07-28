@@ -45,6 +45,7 @@ let private importCorrespondence correspondence =
     correspondence |> Array.iter Correspondence.post
 
 let importAll (wrapper : SrmWrapper) = 
+    printfn "Migrating all data"
     let importedProfiles = importProfiles wrapper.Profiles
     importHandlesPerProfile importedProfiles
     let preparedSessions = wrapper.Sessions |> Array.map (setSpeakerAndAdminIdsOnSession importedProfiles)

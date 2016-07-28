@@ -16,7 +16,7 @@ let main _ =
         saveData Config.srmOutputPath preImportSrmModels
         
         SrmImport.importAll preImportSrmModels
-
+        printfn "Migration Complete"
         0
     with ex -> 
         printfn "%A" ex

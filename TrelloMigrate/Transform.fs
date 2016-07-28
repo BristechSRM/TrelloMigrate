@@ -209,6 +209,7 @@ module private Correspondence =
         |> Array.concat
 
 let toSrmModels (board : BoardSummary) = 
+    printf "Transforming all data for migration"
     let admins = board.Members |> Array.map Admin.create
     let parsedCards = board.BasicCards |> Array.choose (SessionAndSpeaker.tryParseFromCard admins)
     let profiles, sessions = SessionAndSpeaker.splitProfilesFromSessions admins parsedCards
