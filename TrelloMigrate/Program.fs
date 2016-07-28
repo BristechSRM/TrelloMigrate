@@ -8,15 +8,15 @@ let main _ =
         File.WriteAllText(path, result)
     try 
         JsonSettings.setDefaults()
-        let preImportSrmModels = 
+        let preMigrationSrmModels = 
             Credentials.getTrelloCredentials()
             |> TrelloClient.getBoardSummary
             |> Transform.toSrmModels
 
-        saveData Config.srmOutputPath preImportSrmModels
+        saveData Config.srmOutputPath preMigrationSrmModels
         
-        SrmImport.importAll preImportSrmModels
-
+        SrmMigrate.migrateAll preMigrationSrmModels
+        printfn "Migration Complete"
         0
     with ex -> 
         printfn "%A" ex

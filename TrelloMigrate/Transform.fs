@@ -47,6 +47,7 @@ module private Handle =
           Identifier = email.ToLowerInvariant() }
 
 module private Admin = 
+    //TODO use external list of emails / handles for admins, as not all admins are from scott logic. 
     let private nameToScottLogicEmail (forename : string) (surname : string) = 
         if String.IsNullOrWhiteSpace surname then
             forename + "@scottlogic.co.uk"
@@ -75,12 +76,19 @@ module private Speaker =
           Handles = handles }
 
 module private Session = 
-    let create (parsedCardName : ParsedCardName) = 
+    //Accept date if it is on the first Thursday of the month. 
+    let useDateIfEventDate (date : DateTime) = 
+        if date.DayOfWeek = DayOfWeek.Thursday && date.Day <= 7 then
+            Some date
+        else 
+            None
+
+    let create (parsedCardName : ParsedCardName) (cardDate : DateTime option) = 
         { Id = Guid.Empty 
           Title = parsedCardName.TalkData 
           Description = String.Empty
           Status = String.Empty
-          Date = None
+          Date = cardDate |> Option.bind useDateIfEventDate
           SpeakerId = Guid.Empty 
           AdminId = None
           DateAdded = None }
@@ -112,7 +120,7 @@ module private SessionAndSpeaker =
     let tryParseFromCard (admins : ProfileWithReferenceId []) (card : BasicCard) = 
         match tryParseCardName card.Name with
         | Some parsedCard -> 
-            Some { Session = Session.create parsedCard
+            Some { Session = Session.create parsedCard card.Due
                    Speaker = Speaker.createProfileWithHandles parsedCard
                    CardTrelloId = card.Id
                    AdminTrelloId = tryPickAdminId admins card }
@@ -186,9 +194,10 @@ module private Correspondence =
         match cardActions.TryFind(sr.SpeakerTrelloId) with
         | Some cardActions -> 
             let speakerEmailOption = profiles.[sr.SpeakerTrelloId] |> tryGetEmailFromProfile
-            let adminEmailOption = sr.AdminTrelloId |> Option.bind (fun pid -> tryGetEmailFromProfile profiles.[pid])
             match speakerEmailOption with
-            | Some speakerEmail -> cardActions |> Array.choose (tryCreateCorrespondence sr.Session.Title sr.SpeakerTrelloId speakerEmail sr.AdminTrelloId adminEmailOption)
+            | Some speakerEmail -> 
+                let adminEmailOption = sr.AdminTrelloId |> Option.bind (fun pid -> tryGetEmailFromProfile profiles.[pid])
+                cardActions |> Array.choose (tryCreateCorrespondence sr.Session.Title sr.SpeakerTrelloId speakerEmail sr.AdminTrelloId adminEmailOption)
             | None -> 
                 printfn "Card: '%s' has possible correspondence comments, but no speakerEmail. Correspondence will not be processed." sr.Session.Title
                 [||]
@@ -200,6 +209,7 @@ module private Correspondence =
         |> Array.concat
 
 let toSrmModels (board : BoardSummary) = 
+    printf "Transforming all data for migration"
     let admins = board.Members |> Array.map Admin.create
     let parsedCards = board.BasicCards |> Array.choose (SessionAndSpeaker.tryParseFromCard admins)
     let profiles, sessions = SessionAndSpeaker.splitProfilesFromSessions admins parsedCards

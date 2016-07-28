@@ -21,6 +21,7 @@ let private getBasicActionsByCardId trelloCred (cardId : string) =
     |> JsonHttpClient.get<BasicAction []>
 
 let getBoardSummary trelloCred = 
+    printfn "Pulling all data from Trello"
     let basicCards = getBasicCards trelloCred
     
     let cardActions = 
