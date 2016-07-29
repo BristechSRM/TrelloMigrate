@@ -251,8 +251,13 @@ paket-files/
 .idea/
 *.sln.iml
 
-
 # Ubuntu trash folder
 .Trash-*
 
 TrelloCreds.config
+
+# Output dir (build)
+build/output/
+
+# Nuget stuff (can be install with build.sh)
+.nuget/
