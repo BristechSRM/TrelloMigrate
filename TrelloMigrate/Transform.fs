@@ -28,17 +28,18 @@ module private Profile =
         else 
             sprintf "https://trello-avatars.s3.amazonaws.com/%s/50.png" avatarHash
 
-    let private create imageUrl (names : Names) : Profile = 
+    let private create imageUrl isAdmin (names : Names) : Profile = 
         { Id = Guid.Empty 
           Forename = names.Forename
           Surname = names.Surname
           Rating = 1 
           ImageUrl = imageUrl
-          Bio = String.Empty }
+          Bio = String.Empty 
+          IsAdmin = isAdmin }
 
-    let fromMember (basicMember : BasicMember) = parseFullName basicMember.FullName |> create (getImageUrl basicMember.AvatarHash)
+    let memberToAdminProfile (basicMember : BasicMember) = parseFullName basicMember.FullName |> create (getImageUrl basicMember.AvatarHash) true
 
-    let fromNameString (fullName : string) = parseFullName fullName |> create defaultImageUrl
+    let nameStringToSpeakerProfile (fullName : string) = parseFullName fullName |> create defaultImageUrl false
 
 module private Handle = 
     let createEmailHandle (email : string) = 
@@ -57,7 +58,7 @@ module private Admin =
             sprintf "%c%s@scottlogic.co.uk" firstNameFirstLetter lastName
 
     let create (basicMember : BasicMember) : ProfileWithReferenceId = 
-        let profile = Profile.fromMember basicMember
+        let profile = Profile.memberToAdminProfile basicMember
         let handle = nameToScottLogicEmail profile.Forename profile.Surname |> Handle.createEmailHandle
         { ReferenceId = basicMember.Id
           ProfileWithHandles = 
@@ -66,7 +67,7 @@ module private Admin =
 
 module private Speaker = 
     let createProfileWithHandles (parsedCardName : ParsedCardName) = 
-        let speakerProfile = Profile.fromNameString parsedCardName.SpeakerName
+        let speakerProfile = Profile.nameStringToSpeakerProfile parsedCardName.SpeakerName
         
         let handles = 
             match parsedCardName.SpeakerEmail with
