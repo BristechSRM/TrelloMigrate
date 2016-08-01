@@ -37,9 +37,9 @@ module private Profile =
           Bio = String.Empty 
           IsAdmin = isAdmin }
 
-    let memberToAdminProfile (basicMember : BasicMember) = parseFullName basicMember.FullName |> create (getImageUrl basicMember.AvatarHash) true
+    let createAdmin (basicMember : BasicMember) = parseFullName basicMember.FullName |> create (getImageUrl basicMember.AvatarHash) true
 
-    let nameStringToSpeakerProfile (fullName : string) = parseFullName fullName |> create defaultImageUrl false
+    let createSpeaker (fullName : string) = parseFullName fullName |> create defaultImageUrl false
 
 module private Handle = 
     let createEmailHandle (email : string) = 
@@ -58,7 +58,7 @@ module private Admin =
             sprintf "%c%s@scottlogic.co.uk" firstNameFirstLetter lastName
 
     let create (basicMember : BasicMember) : ProfileWithReferenceId = 
-        let profile = Profile.memberToAdminProfile basicMember
+        let profile = Profile.createAdmin basicMember
         let handle = nameToScottLogicEmail profile.Forename profile.Surname |> Handle.createEmailHandle
         { ReferenceId = basicMember.Id
           ProfileWithHandles = 
@@ -67,7 +67,7 @@ module private Admin =
 
 module private Speaker = 
     let createProfileWithHandles (parsedCardName : ParsedCardName) = 
-        let speakerProfile = Profile.nameStringToSpeakerProfile parsedCardName.SpeakerName
+        let speakerProfile = Profile.createSpeaker parsedCardName.SpeakerName
         
         let handles = 
             match parsedCardName.SpeakerEmail with
