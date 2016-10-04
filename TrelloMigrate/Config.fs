@@ -16,4 +16,3 @@ let private getUriConfigValue (key : string) =
 
 let srmOutputPath = getConfigValue "SrmOutputPath"
 let sessionsServiceUri = getUriConfigValue "SessionsServiceUrl"
-let commsServiceUri = getUriConfigValue "CommsServiceUrl"

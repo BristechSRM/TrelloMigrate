@@ -19,7 +19,3 @@ module Handle =
 module Session = 
     let private endpoint = Uri(sessionsServiceUri, "Sessions")
     let post (session : Session) = post endpoint session
-
-module Correspondence = 
-    let private endpoint = Uri(commsServiceUri, "Correspondence")
-    let post (item : CorrespondenceItem) = post endpoint item
