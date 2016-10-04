@@ -5,7 +5,7 @@
 3. If there are any detected data errors on the board, the migration will throw an exception and cancel before any import is performed. 
 
 ## Setup
-To setup TrelloMigrate for running, edit App.config and set SessionsServiceUrl and CommsServiceUrl to point to the correct sessions service and comms service.
+To setup TrelloMigrate for running, edit App.config and set SessionsServiceUrl to point to the correct sessions service.
 
 Next, copy the TrelloCredsTemplate.config and rename it to TrelloCreds.config.
 Login to Trello with your account that is connected to the BristechSrm board.
