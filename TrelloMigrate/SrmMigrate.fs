@@ -37,19 +37,10 @@ let private setSpeakerAndAdminIdsOnSession (importedProfiles : Map<string, Profi
     
 let private migrateSessions sessions = sessions |> Array.iter Session.post
 
-let private setSenderAndReceiverOnCorrespondence (importedProfiles : Map<string,ProfileWithHandles>) (cr : CorrespondenceWithReferences) =
-    { cr.Item with SenderId = importedProfiles.[cr.SenderTrelloId].Profile.Id
-                   ReceiverId = importedProfiles.[cr.ReceiverTrelloId].Profile.Id }
-
-let private migrateCorrespondence correspondence = 
-    correspondence |> Array.iter Correspondence.post
-
 let migrateAll (wrapper : SrmWrapper) = 
     printfn "Migrating all data"
     let importedProfiles = migrateProfiles wrapper.Profiles
     migrateHandlesPerProfile importedProfiles
     let preparedSessions = wrapper.Sessions |> Array.map (setSpeakerAndAdminIdsOnSession importedProfiles)
     migrateSessions preparedSessions
-    let preparedCorrespondence = wrapper.Correspondence |> Array.map (setSenderAndReceiverOnCorrespondence importedProfiles)
-    migrateCorrespondence preparedCorrespondence
     ()
